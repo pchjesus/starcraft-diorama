@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071318">
-<title>Factory After Hours · 3D Model Pass v0.5</title>
+<title>Factory After Hours · 3D Arclite Pass v1.0-A</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071318;color:#ecf2eb}
@@ -28,7 +28,7 @@
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
 <div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><button id="assetBtn" type="button" title="로컬 스타1 그래픽팩 불러오기">로컬 그래픽팩</button><button id="spriteToggle" type="button" title="스프라이트 레이어 전환">그래픽: 3D</button><input id="assetInput" type="file" accept="image/*,.json" multiple webkitdirectory directory><div><div class="eyebrow">SCENE 01 / BROOD WAR MODEL PASS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div><span id="assetMode">LOCAL SPRITE MODE · OFF</span></div></div>
-<div id="badge">V0.7 · CC0 SPRITE EXPERIMENT · NO AUDIO</div><div id="progress"></div>
+<div id="badge">V1.0-A · ARCLITE MODEL PASS · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
@@ -247,45 +247,93 @@ function marine(b,x,z,t,lead,react,watch){
  b.box(-.06,.73,.57,.19,.26,.15,'#435a57','#2d4649');
  b.pop();b.pop();b.pop();
 }
-function tank(b,x,z,t,dist,turn){b.push(x,.13,z);
- // Original Arclite outline: broad low hull, clearly separated tracks, two barrels.
- for(let side of [-1,1]){
-  b.box(side*.73,.42,0,.65,.57,2.02,'#465b62','#263b44');
-  b.box(side*.73,.74,-.01,.72,.17,1.95,'#687a7e','#425962');
-  b.box(side*.73,.18,.0,.70,.12,1.92,'#384a50','#253b42');
-  // Road wheel hubs mounted perpendicular to the sides.
-  for(let j=0;j<5;j++)axialWheel(b,side*1.079,.34,-.77+j*.38,.16,'#617578');
-  for(let j=0;j<10;j++){
-   const step=((dist*.17)% .188);b.box(side*.74,.77,-.85+j*.188+step,.71,.075,.09,'#95a39a','#54666b');
-   b.box(side*.74,.13,-.85+j*.188+step,.71,.064,.077,'#607476','#364e53');
+// v1.0-A / 1998 StarCraft Arclite-inspired, independently authored primitives.
+// Vehicle points towards +Z; turret is the sole part receiving the yaw rotation.
+function tank(b,x,z,t,dist,turn){
+  b.push(x,.13,z);
+  const iron='#32434c',tread='#263841',treadEdge='#52656b',steel='#6e8184',light='#a4ada4',trim='#879b99';
+  // Four visibly separate track modules (front and rear, left and right), not a single metal box.
+  // Total footprint remains within the former tank envelope for the Factory-door gag.
+  for(const side of [-1,1]){
+    for(const end of [-1,1]){
+      const podZ=end*.51;
+      b.box(side*.77,.40,podZ,.58,.51,.98,iron,'#1c2c34');
+      b.box(side*.77,.69,podZ,.61,.13,.91,treadEdge,iron);
+      b.box(side*.77,.12,podZ,.61,.09,.90,'#45575b','#304249');
+      // Moving shoes top and bottom; wrap within this individual tread pod.
+      for(let j=0;j<6;j++){
+        const shoeZ=podZ+((j*.155+dist*.17)% .93)-.465;
+        b.box(side*.77,.769,shoeZ,.60,.065,.083,'#8b9991','#485c60');
+        b.box(side*.77,.066,shoeZ,.60,.06,.083,'#53686b','#30464c');
+      }
+      for(let j=0;j<3;j++){
+        const wheelZ=podZ+(j-1)*.293;
+        axialWheel(b,side*1.071,.343,wheelZ,.14,'#66787c');
+        b.box(side*1.108,.343,wheelZ,.04,.068,.065,'#9aaba5','#536970');
+      }
+      // Clipped / beveled armored side skirts with a dark gap exposing wheels.
+      armorWedge(b,side*.78,.794,podZ,.69,.59,.20,.89,.75,'#859691','#4a5e65');
+      b.box(side*.975,.66,podZ,.045,.13,.79,'#576c72','#354951');
+      for(let k of [-1,1])b.box(side*.76,.553,podZ+k*.40,.51,.045,.07,'#a0a9a0','#516770');
+    }
+    // External front fender, aft exhausts and bolt heads break up the silhouette.
+    armorWedge(b,side*.69,.68,1.019,.67,.52,.24,.36,.27,'#728689','#405661');
+    b.box(side*.70,.44,1.113,.61,.15,.13,'#9da49c','#51646a');
+    b.box(side*.77,.82,-1.042,.52,.13,.13,'#52676d','#34484f');
+    b.box(side*.735,.71,-.14,.23,.085,.16,'#bd9b70','#6e5c4d');
   }
-  b.box(side*1.02,.63,.40,.09,.10,.68,'#84958e','#475c61');
- }
- armorWedge(b,0,.64,0,1.74,1.43,.58,2.15,1.77,'#91a39b','#546b72');
- b.box(0,.43,.88,1.39,.15,.34,'#55686b','#344951');
- armorWedge(b,0,.79,-.70,1.41,1.02,.30,1.06,.85,'#798e8d','#4d646d');
- b.box(0,.81,1.04,1.07,.15,.21,'#a7b3a6','#687875');
- for(let side of [-1,1]){
-  b.box(side*.55,.65,1.07,.30,.18,.12,'#c7a36c','#856744');
-  b.box(side*.56,.82,-.77,.36,.08,.52,'#72898a','#435b61');
-  for(let j=0;j<3;j++)b.box(side*.55,.49,-.26+j*.3,.22,.05,.12,'#a3b2a4','#4c6965');
- }
- // Separate circular turret ring controls only upper hull and gun barrels.
- b.cylinder(0,1.00,-.15,.68,.18,'#52666e','#93a59f',12);
- b.push(0,1.14,-.14,turn);
- armorWedge(b,0,.16,0,1.19,.92,.52,1.09,.84,'#92a399','#536972');
- b.box(0,.40,-.27,.75,.12,.53,'#b0b8aa','#6a7d7b');
- b.box(0,.43,.17,.66,.15,.35,'#718783','#3f5860');
- b.cylinder(-.28,.48,-.22,.19,.075,'#4d6570','#afb9ae',10);
- b.box(.23,.49,-.16,.19,.12,.30,'#435b61','#304a50');
- // Barrel sleeves and steel muzzle brakes follow the turret yaw.
- for(let side of [-1,1]){
-  b.box(side*.28,.20,.78,.27,.25,1.32,'#9aa9a2','#526c75');
-  b.box(side*.28,.20,1.49,.20,.19,.22,'#637d81','#3a555b');
-  b.box(side*.28,.20,1.61,.31,.28,.15,'#bdc3b2','#65787b');
-  b.box(side*.28,.20,1.697,.15,.09,.025,'#1c3640','#283f46');
- }
- b.pop();b.pop();}
+  // Deep underbody, rising stepped glacis and substantial rear engine deck.
+  b.box(0,.394,0,1.49,.34,2.04,'#536a71','#324650');
+  armorWedge(b,0,.673,.04,1.69,1.38,.56,2.12,1.70,'#82968f','#485e69');
+  armorWedge(b,0,.716,.80,1.41,1.20,.20,.61,.39,'#99a69d','#546a72');
+  b.box(0,.447,1.067,1.30,.16,.20,'#62767a','#354950');
+  b.box(0,.382,1.165,.91,.12,.08,'#3b515b','#253942');
+  for(const side of [-1,1]){
+    // Split armor cheeks, amber marker lights and hull fasteners.
+    b.box(side*.61,.765,.43,.27,.13,1.00,'#6c8484','#455a63');
+    b.box(side*.57,.672,1.081,.20,.13,.085,'#e4b36d','#93683e');
+    b.box(side*.53,.832,.61,.13,.04,.09,'#abb5a8','#607774');
+    b.box(side*.54,.857,-.66,.16,.08,.40,'#536d73','#314c55');
+    for(let j=0;j<3;j++)b.box(side*.54,.868,-.39+j*.22,.08,.033,.05,'#b0b3a5','#52676e');
+  }
+  armorWedge(b,0,.858,-.67,1.43,1.20,.29,.89,.73,'#71868a','#405861');
+  // Rear cooling grille: recessed louvers rather than an uninterrupted flat roof.
+  for(let j=0;j<5;j++)b.box(0,1.012,-.46-j*.123,.73,.027,.058,j%2?'#2f4952':'#384e57','#253941');
+  b.box(0,.925,-1.016,1.08,.12,.12,'#a0aaa2','#5b6e72');
+  // Tank's circular turret ring stays attached to the hull.
+  b.cylinder(0,1.033,-.14,.62,.14,'#3b535c','#94a6a1',12);
+  b.cylinder(0,1.123,-.14,.51,.055,'#586e74','#a7b1a7',12);
+  // Only the turret/dual cannon subtree rotates, never the tracks or lower hull.
+  b.push(0,1.16,-.14,turn);
+  armorWedge(b,0,.12,-.055,1.18,.92,.40,1.02,.78,'#8a9d98','#475c66');
+  b.box(0,.321,-.206,.80,.09,.52,'#aab5a9','#66797a');
+  b.box(0,.312,.278,.87,.10,.23,'#637b7f','#364b55');
+  // Squared, low-slung turret cheeks with thin corner armor details.
+  for(const side of [-1,1]){
+    armorWedge(b,side*.478,.08,.14,.29,.19,.27,.61,.45,'#6e8485','#455963');
+    b.box(side*.49,.203,.12,.12,.041,.35,'#9daaa0','#516873');
+    b.box(side*.38,.041,-.43,.13,.12,.15,'#546a72','#354b52');
+  }
+  // Raised rear hatch, view slot, rivets and compact aerial mount.
+  b.cylinder(-.23,.382,-.27,.17,.055,'#4b626b','#a3b2a8',10);
+  b.box(-.23,.416,-.27,.19,.035,.08,'#344b55','#536c72');
+  b.box(.205,.352,-.285,.23,.065,.17,'#394c55','#253a43');
+  b.box(0,.207,.375,.62,.055,.07,'#9aaca5','#516870');
+  // Twin 80-mm-style barrels: armored roots, faceted circular tubes, collars, open-looking muzzles.
+  for(const side of [-1,1]){
+    const barrelX=side*.258;
+    b.box(barrelX,.155,.48,.265,.245,.58,'#657b80','#394f59');
+    b.box(barrelX,.232,.53,.26,.079,.35,'#9ba9a3','#5a7278');
+    b.push(barrelX,.156,1.057,0,Math.PI/2);
+    b.cylinder(0,0,0,.104,1.07,'#657d82','#b4bab0',10);
+    b.cylinder(0,.325,0,.126,.17,'#4c626c','#96a39e',10);
+    b.cylinder(0,.542,0,.148,.145,'#879895','#c1c3b2',10);
+    b.cylinder(0,.629,0,.094,.04,'#172d36','#182e38',10);
+    b.pop();
+    b.box(barrelX,.04,.71,.195,.07,.15,'#405963','#2f454e');
+  }
+  b.pop();b.pop();
+}
 function scv(b,t){const spots=[[4.53,2.92],[4.20,2.76],[4.34,3.21]],phase=t%18,k=Math.floor(phase/6),p=phase%6,move=S(4.1,5.5,p),x=lerp(spots[k][0],spots[(k+1)%3][0],move),z=lerp(spots[k][1],spots[(k+1)%3][1],move),bob=Math.sin(t*2.6)*.025;
  b.push(x,.18+bob,z,-.55+(k-1)*.23);
  // Squat industrial service vehicle, no humanoid legs.
