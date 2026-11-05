@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#08131a" />
-<title>Factory After Hours · Scene 01 v0.2</title>
+<title>Factory After Hours · Scene 01 v0.3</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08131a;color:#dce6e1}
@@ -24,7 +24,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08131a;col
 <canvas id="stage" aria-label="숲속의 작은 SF 군수공장. 전차가 공장에서 나와 마린을 놀라게 한 뒤 천천히 다시 들어간다. SCV는 끝없이 용접한다."></canvas>
 <div id="shade"></div>
 <div id="hud"><button id="control" aria-label="장면 일시정지" title="일시정지 (Space)">Ⅱ</button><div><div class="eyebrow">SCENE 01 / A SMALL OUTPOST</div><div class="title">Factory after hours</div><div class="subtitle">평화로운 군수공장 · 움직이는 작은 이야기</div></div></div>
-<div id="hint">SCENE 01 · V0.2 · NO AUDIO</div>
+<div id="hint">SCENE 01 · V0.3 · NO AUDIO</div>
 <script>
 'use strict';
 // Standalone canvas/isometric visual prototype. No libraries, audio, or game assets.
@@ -79,30 +79,87 @@ for(let i=0;i<top.length;i++){if(i<3||i>7)continue;let j=(i+1)%top.length;polygo
 polygon(upper,'#3e443c','#526056',1.1);
 // Fine ground grit follows world coordinates, clipped by plateau outline.
 ctx.save();ctx.beginPath();upper.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.clip();for(const s of speckles){let p=proj(s.x,s.z,.015);ellipse(p[0],p[1],s.r*3,s.r*.95,rgba(s.c,s.a))}
-for(let i=0;i<45;i++){let k=i/45;let a=proj(-5.3+11*k,3.9,.02),b=proj(-5.2+11*k,4.08,.02);path([a,b],rgba('#b5ad85',.04),rr(1,3))}
+for(let i=0;i<45;i++){let k=i/45;let a=proj(-5.3+11*k,3.9,.02),b=proj(-5.2+11*k,4.08,.02);path([a,b],rgba('#b5ad85',.04),1+((i*13)%18)/9)}
 ctx.restore();return upper;}
 function warmPools(){const lights=[{x:1.3,z:-1.3,r:190,a:.49},{x:-3.0,z:-2.4,r:130,a:.34},{x:-2.8,z:2.0,r:75,a:.06}];ctx.save();ctx.beginPath();const pts=[[-6,-5.1],[-3.2,-6],[3.7,-5.9],[6.35,-3],[6.55,3.9],[4.9,5.7],[-3.9,5.7],[-6.25,3.4]].map(q=>proj(...q));pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.clip();for(let l of lights){let p=proj(l.x,l.z,0),g=ctx.createRadialGradient(...p,0,...p,l.r*scale);g.addColorStop(0,rgba('#d99b51',l.a));g.addColorStop(.42,rgba('#b77639',l.a*.32));g.addColorStop(1,rgba('#e79d3a',0));ctx.fillStyle=g;ctx.fillRect(p[0]-l.r*scale,p[1]-l.r*scale,l.r*2*scale,l.r*2*scale)}ctx.restore();}
 function stoneScatter(){for(let i=0;i<78;i++){let r=randomGen(i*211+313);let x=r()*17-8.5,z=r()*17-8.5;if(Math.abs(x)<5.9 && Math.abs(z)<5.8)continue;let p=proj(x,z,-1.45);const sz=.15+r()*.4;polygon([[p[0]-sz*20*scale,p[1]],[p[0]-sz*4*scale,p[1]-sz*16*scale],[p[0]+sz*23*scale,p[1]-sz*4*scale],[p[0]+sz*8*scale,p[1]+sz*8*scale]],'#243b3b','#152a31',.6)}}
 function metalBase(x,z,wx,wz){ringWorld(x,z,.015,Math.max(wx,wz)*.6,'rgba(18,28,32,.55)');prism(x,z,wx,wz,.21,'#56636a','#37434a','#45525c');}
+// Art-direction pass v0.3: small visual details remain procedural and original.
+function rivet(x,z,y,shade='#d4c5a1',r=1.2){const p=proj(x,z,y);circle(p[0],p[1],r,shade,'#36434c',.45)}
+function techSlatsZ(x,z,width,lo,hi,n=5,colors=['#172b33','#5e797b']){
+  for(let k=0;k<n;k++){let xx=x-width/2+(k+.5)*width/n;
+   faceZ(xx,z,width/n*.62,lo,hi,colors[k%colors.length]);
+  }
+}
+function techSlatsX(x,z,width,lo,hi,n=5,colors=['#1b333b','#657b7b']){
+  for(let k=0;k<n;k++){let zz=z-width/2+(k+.5)*width/n;
+   faceX(x,zz,width/n*.58,lo,hi,colors[k%colors.length]);
+  }
+}
+function hazardStrip(x,z,w,y=.025){
+ let pa=[proj(x-w/2,z,y),proj(x+w/2,z,y),proj(x+w/2,z+.24,y),proj(x-w/2,z+.24,y)];
+ polygon(pa,'#4e4b40','#868166',.7);
+ for(let i=0;i<7;i++){let a=x-w/2+(i+.35)*w/7;
+  worldLine(a,z+.015,y+.007,a+w/15,z+.22,y+.007,'#c4a15d',2.8);
+ }
+}
+function roofStrut(x,z,xspan,y){for(let j=0;j<3;j++){
+ let zz=z-.30+j*.30;worldLine(x-xspan/2,zz,y,x+xspan/2,zz,y,'#b6bdb3',1.6);
+ for(const sx of [-1,1])rivet(x+sx*xspan/2,zz,y+.008,'#c1c3b0',.8);
+}}
 function supply(x,z,t){shadow(x,z,35,14);metalBase(x,z,2.0,1.95);prism(x,z,1.8,1.75,.67,'#748087','#2d3c42','#43505b',.22);cylinder(x,z,.91,.85,.62,'#64747e','#849398');ringWorld(x,z,1.58,.70,'#34454e','#bac8bd');let p=proj(x,z,1.6);for(let i=0;i<6;i++){let a=i*Math.PI/3;ellipse(p[0]+Math.cos(a)*21*scale,p[1]+Math.sin(a)*9*scale,3,2,'#b4ac8f')}
-fan(x,z,1.64,.38,t);stripesZ(x,z+1.0,1.28,.20,.34,7);tinyLight(x+.55,z+.96,.53,'#8bc96d',2);}
+fan(x,z,1.64,.38,t);stripesZ(x,z+1.0,1.28,.20,.34,7);tinyLight(x+.55,z+.96,.53,'#8bc96d',2);
+// Low armored supply bunker roof: angular braces, vents and little fasteners.
+for(let side of [-1,1]){worldLine(x+side*.72,z-.57,.89,x+side*.72,z+.55,.89,'#abb7ad',2.0);
+  for(let i=0;i<3;i++)rivet(x+side*.76,z-.46+i*.45,.89,'#b4b6a8',.95);}
+techSlatsX(x+.90,z,.92,.30,.53,5);
+techSlatsZ(x,z+.88,1.05,.32,.52,5,['#263942','#a1a08b']);
+}
 function armory(x,z,t){shadow(x,z,50,20);metalBase(x,z,2.45,1.88);prism(x,z,2.3,1.65,1.68,'#8d8a7a','#45505a','#4c5459',.20);prism(x-.25,z-.28,1.42,.85,.75,'#66707a','#303b44','#43515c',1.88);
 // Upright mechanical chimneys and warm windows.
 for(let i=0;i<2;i++){let px=x-.65+i*1.15,pz=z-.45;cylinder(px,pz,1.86,.16,1.45,'#3f4e55','#869292');ellipse(...proj(px,pz,3.34),6,3.2,'#15252c','#c2a57b',1);}
 faceZ(x,z+.83,.65,.63,1.37,'#d88c3e','#e1ab69');for(let i=0;i<3;i++)faceX(x+1.15,z-.48+i*.43,.17,.35,1.05,i%2?'#b9793c':'#f5bd61');tinyLight(x-.6,z+.89,.81,'#d8a35d',1.6);fan(x-.25,z-.27,2.64,.30,t*.7);glows(...proj(x,z+.7,1.2),95,'#d78e45',.18);
+// Forged-armour panels, rivets and warm furnace exhausts: more Brood War, less plain cube.
+techSlatsZ(x-.77,z+.84,.80,.45,1.12,5,['#243239','#64706d']);
+roofStrut(x-.2,z-.3,1.38,2.67);
+for(let j=0;j<4;j++)rivet(x-1.02+j*.64,z+.83,1.53,'#d2b89a',1.05);
+for(let j=0;j<3;j++){worldLine(x+1.16,z-.72+j*.52,.32,x+1.16,z-.72+j*.52,1.3,'#abb1a7',1.4);}
+
 }
 function factory(x,z,t){shadow(x,z,77,30);metalBase(x,z,3.65,2.75);prism(x,z,3.55,2.65,1.98,'#83919a','#334752','#4d5961',.22);prism(x+.1,z-.54,2.9,1.25,.48,'#71818b','#4b5c66','#64727c',2.2);
-// Big industrial latches and layered roof ribs.
-for(let i=0;i<5;i++){let xx=x-1.45+i*.7;worldLine(xx,z-.99,2.74,xx,z+.04,2.74,'#b6c3b7',.9)}
+// Heavy, plate-built factory roof and inset industrial conduits.
+for(let i=0;i<5;i++){let xx=x-1.45+i*.7;worldLine(xx,z-.99,2.74,xx,z+.04,2.74,'#b6c3b7',1.7);
+ rivet(xx,z-.98,2.74,'#e0caa1',.8);
+}
+prism(x-.95,z-.98,.68,.44,.22,'#515f68','#374951','#4c6066',2.71);
+prism(x+.90,z-.98,.74,.49,.21,'#5f6d71','#31434b','#40565d',2.70);
+techSlatsX(x+1.80,z-.35,1.12,.52,1.12,6,['#1a343b','#759088']);
+
 // Front exit portal uses dark inset & orange inner glow, painted on z+ facade.
 const gateZ=z+1.345;faceZ(x,gateZ,2.04,.27,1.83,'#15242b','#b1a991');faceZ(x,gateZ+.008,1.60,.28,1.59,'#241e1a','#6c6660');faceZ(x,gateZ+.01,1.22,.29,1.37,'#c58b52');faceZ(x,gateZ+.025,.98,.29,1.29,'#24282a');for(let i=0;i<4;i++)worldLine(x-.46+i*.31,gateZ+.027,.33,x-.46+i*.31,gateZ+.027,1.25,'#3b4247',1.3);
 for(let s of [-1,1]){prism(x+s*1.47,gateZ+.09,.28,.33,1.52,'#aeb4aa','#66737a','#72808a',.3);tinyLight(x+s*1.46,gateZ+.28,1.35,'#eeb867',1.9)}
 // Angled roof ventilator and two smoke pipes.
 fan(x-.74,z-.34,2.75,.47,t*1.1);cylinder(x+1.07,z-.6,2.48,.17,.9,'#58656a','#899491');cylinder(x+.72,z-.99,2.48,.13,1.14,'#52646a','#8e9695');
 for(let i=0;i<3;i++){faceX(x+1.78,z-1.00+i*.75,.27,.70,1.45,i===1?'#79b59a':'#bf8b46')}
-for(let i=0;i<5;i++)worldLine(x-1.48+i*.73,z+1.38,.17,x-1.48+i*.73,z+1.38,.38,'#9a9f8c',1.3);glows(...proj(x,gateZ,1.1),125,'#e7a45b',.20);
+for(let i=0;i<5;i++)worldLine(x-1.48+i*.73,z+1.38,.17,x-1.48+i*.73,z+1.38,.38,'#9a9f8c',1.3);
+// Brood War-style factory door: panelized armour, warning bars and riveted vertical supports.
+for(let i=0;i<5;i++){
+ let xx=x-.47+i*.235;worldLine(xx,gateZ+.030,.33,xx,gateZ+.030,1.23,'#556267',1.0);
 }
-function shop(x,z,t){shadow(x,z,45,18);metalBase(x,z,1.9,1.95);prism(x,z,1.72,1.7,1.35,'#8a969b','#42515a','#586269',.23);prism(x-.1,z-.12,1.38,.98,.34,'#697b80','#364953','#4b5d64',1.58);fan(x-.1,z-.14,1.94,.50,t);faceZ(x,z+.86,1.09,.58,1.0,'#1c4141','#609b87');for(let i=0;i<4;i++)tinyLight(x-.44+i*.28,z+.9,.42,i%2?'#b7d35e':'#66d7a6',.8);}
+for(let j=0;j<4;j++){
+ let yy=.42+j*.27;worldLine(x-.55,gateZ+.029,yy,x+.55,gateZ+.029,yy,'#869185',.9);
+}
+for(let side of [-1,1]){
+ for(let k=0;k<4;k++)rivet(x+side*1.47,gateZ+.29,.45+k*.28,'#c6b9a4',.9);
+}
+hazardStrip(x,gateZ+.44,2.5,.018);
+glows(...proj(x,gateZ,1.1),125,'#e7a45b',.27);
+}
+function shop(x,z,t){shadow(x,z,45,18);metalBase(x,z,1.9,1.95);prism(x,z,1.72,1.7,1.35,'#8a969b','#42515a','#586269',.23);prism(x-.1,z-.12,1.38,.98,.34,'#697b80','#364953','#4b5d64',1.58);fan(x-.1,z-.14,1.94,.50,t);faceZ(x,z+.86,1.09,.58,1.0,'#1c4141','#609b87');for(let i=0;i<4;i++)tinyLight(x-.44+i*.28,z+.9,.42,i%2?'#b7d35e':'#66d7a6',.8);
+techSlatsX(x+.87,z,.9,.45,1.11,5);
+for(let i=0;i<4;i++)rivet(x-.57+i*.37,z+.87,1.21,'#c9c9b5',.9);
+roofStrut(x,z-.18,1.18,1.97);
+}
 function bunkerFrame(x,z,t){shadow(x,z,33,14);let c=[[x-.85,z-.72],[x+.85,z-.72],[x+.85,z+.72],[x-.85,z+.72]];polygon(c.map(q=>proj(...q,.03)),'#344447','#9aa9a3',1.1);for(let i=0;i<4;i++){let q=c[i];let p=proj(q[0],q[1],.13),p2=proj(q[0],q[1],.55);worldLine(q[0],q[1],.10,q[0],q[1],.56,'#8d9994',4);circle(...p2,2.1,'#c6c2aa');}
 for(let k=0;k<2;k++){let z0=z-.55+k*1.05;worldLine(x-.77,z0,.49,x+.77,z0,.49,'#849692',2.4)}for(let k=0;k<3;k++){let x0=x-.55+k*.52;worldLine(x0,z-.64,.48,x0,z+.64,.48,'#576d72',1.9)}
 for(let i=0;i<3;i++){let p=proj(x+(i-1)*.21,z+(i%2-.5)*.23,.3);ellipse(...p,4,2,'#3d474a')}
@@ -123,19 +180,27 @@ function marine(x,z,t,index=0,react=0,watch=0){
  worldLine(xx+.15,zz,.22,xx+.16,zz,.64,'#46645f',7);
  const torso=proj(xx+react*.05,zz,.80+bend+idle*.014),baseColor=index?'#47776e':'#578478';
  ellipse(torso[0],torso[1],13,10,baseColor,'#a3b8a5',1);
+ // CMC-inspired backpack and broad segmented chest carapace.
+ ellipse(torso[0]-5*scale,torso[1]+3*scale,12,11,'#314c4e','#93aba1',.7);
  ellipse(torso[0],torso[1]-2*scale,9,7,'#739d91');
+ path([[torso[0]-7*scale,torso[1]-4*scale],[torso[0]+5*scale,torso[1]+4*scale]],'#a2b7ab',1.2);
+ ellipse(torso[0]-11*scale,torso[1]-2*scale,6,7,'#688a80','#9fb2a4',.8);
+ ellipse(torso[0]+11*scale,torso[1]-2*scale,6,7,'#688a80','#9fb2a4',.8);
  // Helmet glance stays after the initial surprise and follows the departing tank.
  const look=watch*(isLead?1:.17);
  const helmet=proj(xx+.055*idle+look*.11,zz-.06*look,.99+bend);
  ellipse(...helmet,12,9,'#688d84','#bbcab7',1.1);
  ellipse(helmet[0]+look*2.1*scale,helmet[1]-1.4*scale,8,4,'#193943');
  circle(helmet[0]+(1.5+look*4.5)*scale,helmet[1]-.9*scale,2.1,'#a5d8bf');
+ path([[helmet[0]-7*scale,helmet[1]+5*scale],[helmet[0]+6*scale,helmet[1]+5*scale]],'#263f44',1.4);
  // Shoulder plates and gauss rifle move as one small startled gesture.
  worldLine(xx-.24,zz,.83+bend,xx-.29,zz+.20,.57+react*.15,'#698b80',5.4);
  worldLine(xx+.24,zz,.83+bend,xx+.28,zz+.19,.56+react*.15,'#698b80',5.4);
  const gunY=.54+react*.20;
  worldLine(xx-.45,zz+.20,gunY,xx+.46,zz+.16,gunY,'#18272d',4.0);
  worldLine(xx+.17,zz+.18,gunY,xx+.46,zz+.16,gunY,'#a1a68d',2);
+ worldLine(xx-.32,zz+.18,gunY,xx-.22,zz+.15,gunY+.12,'#8e9a91',2.3);
+ worldLine(xx+.02,zz+.14,gunY,xx+.02,zz+.28,gunY-.08,'#718c86',2.0);
  // Subtle warm reflection from factory door when the tank nears.
  if(isLead && react>.1){const p=proj(xx+.08,zz,1.17+bend);circle(...p,2.2,rgba('#e4bb79',react*.44))}
 }
@@ -149,6 +214,15 @@ function tank(x,z,t,alpha=1,turretAngle=0,travel=0){
  // Left/right tracked hull with moving track segments, no wheelspin at idle.
  prism(x-.58,z,.62,1.69,.37,'#39464b','#26343c','#293840',.13);
  prism(x+.58,z,.62,1.69,.37,'#39464b','#26343c','#293840',.13);
+ // Linked track armour and supporting suspension wheels; chassis does not swivel.
+ for(const side of [-1,1]){
+   for(let j=-2;j<=2;j++){
+     let tz=z+j*.32;
+     const wheel=proj(x+side*.72,tz,.21);
+     ellipse(...wheel,3.8,3.3,'#1f2b30','#82908b',.7);
+     worldLine(x+side*.88,tz,.35,x+side*.88,tz+.12,.13,'#9ba69c',1.6);
+   }
+ }
  for(let i=-3;i<=3;i++){
    const zz=z+i*.21+travel*.065;
    if(zz>z+.78 || zz<z-.78)continue;
@@ -165,6 +239,11 @@ function tank(x,z,t,alpha=1,turretAngle=0,travel=0){
  polygon([b,c,C,B],'#46565e','#26353b',1);
  polygon([d,c,C,D],'#57686b','#26353b',1);
  polygon([A,B,C,D],'#89958d','#c2c7b4',1);
+ // Riveted mantlet and layered upper armour are parented to the rotating turret.
+ for(let side of [-1,1]){
+  const tp=r(side*.34,-.17,1.43);circle(tp[0],tp[1],1.1,'#d8c7a5');
+ }
+ path([r(-.33,.19,1.41),r(.33,.19,1.41)],'#4b5a5c',2.1);
  // Two independently placed barrels visibly sweep through the turn.
  for(const off of [-.19,.19]){
    path([r(off,.27,1.40),r(off,.96,1.42)],'#27363c',7.1);
@@ -186,7 +265,11 @@ function scv(x,z,t){
  const hover=.10+Math.sin(t*2.1)*.033;
  const p=proj(xx,zz,hover+.53);
  ellipse(...p,15,12,'#998e61','#e0c99b',1);
+ // Floating excavator shell: yellow shoulder shrouds and blue operator canopy.
  ellipse(p[0],p[1]-3*scale,10,7,'#3e6269','#b6d8d2',1);
+ path([[p[0]-10*scale,p[1]],[p[0]-5*scale,p[1]+8*scale]],'#ebc76d',3.6);
+ path([[p[0]+10*scale,p[1]],[p[0]+5*scale,p[1]+8*scale]],'#ebc76d',3.6);
+ ellipse(p[0],p[1]-5*scale,4.4,3.4,'#6fbbc0');
  ellipse(...proj(xx-.35,zz,.30),7,4,'#526c72');
  ellipse(...proj(xx+.35,zz,.30),7,4,'#526c72');
  // Tool points inside the scaffold instead of sparking into empty space.
@@ -229,7 +312,7 @@ function rockWall(){
   }
   for(let i=0;i<35;i++){
     let r=randomGen(716+i*33),xx=X(76+r()*220),yy=Y(100+r()*280);
-    ellipse(xx,yy,4+r()*14,3+r()*5,rgba(pick(['#1e4030','#31523a','#254b37']),.30+r()*.26));
+    ellipse(xx,yy,4+r()*14,3+r()*5,rgba(['#1e4030','#31523a','#254b37'][Math.floor(r()*3)],.30+r()*.26));
   }
 }
 function naturalAccents(t){
@@ -245,12 +328,37 @@ function naturalAccents(t){
    polygon([[p[0]-sz*scale,p[1]],[p[0]-sz*.3*scale,p[1]-sz*.5*scale],[p[0]+sz*.8*scale,p[1]]],rgba('#899287',.08+r()*.1));
  }
 }
+// Understated undergrowth and rocks enrich the forest edge without blocking the actors.
+const fernPatches=[];{
+ const r=randomGen(77131);
+ for(let i=0;i<125;i++){
+  let x=(r()-.5)*13.9,z=(r()-.5)*12.5;
+  if(Math.abs(x)<5.3&&Math.abs(z)<4.8)continue;
+  fernPatches.push({x,z,s:.45+r()*1.12,h:r()*.5});
+ }
+}
+function forestFloor(){for(const f of fernPatches){
+ const p=proj(f.x,f.z,.08);const c=f.h>.2?'#33573d':'#284637';
+ for(let j=0;j<4;j++){
+  let a=j*Math.PI/2+.26,xx=p[0]+Math.cos(a)*11*f.s*scale,yy=p[1]+Math.sin(a)*4*f.s*scale;
+  path([[p[0],p[1]],[xx,yy-3*f.s*scale]],rgba(c,.47),1.65*f.s);
+ }
+}}
+function cliffVeins(){
+ // Many fine strata catch faint moonlight on the two front-facing island walls.
+ const r=randomGen(31091);
+ for(let i=0;i<78;i++){
+  const x=-4.7+r()*10.5,z=5.35+r()*.30,y=-.10-r()*1.6;
+  const p=proj(x,z,y),len=5+r()*26;
+  path([[p[0],p[1]],[p[0]+len*scale,p[1]+(r()-.5)*9*scale]],rgba(i%3?'#7996a0':'#537c85',.12+r()*.18),.45+r()*.5);
+ }
+}
 function drawWorld(t){ctx.fillStyle='#08131a';ctx.fillRect(0,0,w,h);let sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#06121e');sky.addColorStop(.50,'#0e2329');sky.addColorStop(1,'#0a1c20');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
 // Subtle scattered stars and deep forest foliage.
 let sr=randomGen(671);for(let i=0;i<100;i++){let sx=sr()*w,sy=sr()*h*.55;circle(sx,sy,sr()*.85,rgba('#bad9d8',sr()*.42));}
 ctx.save();ctx.globalAlpha=.65;for(let i=0;i<17;i++){let gx=(i%6)*w/5,gy=(Math.floor(i/6))*h*.3;glows(gx,gy,230,'#102d2d',.17)}ctx.restore();
 const treeFront=[];for(const tr of trees){if(tr.x+tr.z<1.5)drawTree(tr,t);else treeFront.push(tr)}
-stoneScatter();rockWall();paintCliffs();naturalAccents(t);warmPools();
+stoneScatter();rockWall();paintCliffs();cliffVeins();naturalAccents(t);forestFloor();warmPools();
 // Small terrain tufts and pebbles.
 let gr=randomGen(1998);for(let i=0;i<390;i++){let xx=rrdet(gr,-5.5,5.5),zz=rrdet(gr,-5.2,5.2);let p=proj(xx,zz,.015);if(gr()<.2){ellipse(...p,gr()*5+1,gr()*1.3+.5,rgba('#9d9888',.05+gr()*.1))}else{let k=gr();path([[p[0],p[1]],[p[0]+(k-.5)*5*scale,p[1]-(1+k*3)*scale]],rgba('#7c9272',.1+gr()*.12),.7)}}
 // Back buildings and large foreground elements are sorted approximately by depth.
