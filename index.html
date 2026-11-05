@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#08131a" />
+<title>Factory After Hours · Scene 01 v0.2</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#08131a;color:#dce6e1}
+#stage{display:block;position:absolute;inset:0;width:100%;height:100%}
+#shade{position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(3,11,18,.40) 0%,transparent 28%,transparent 72%,rgba(3,11,18,.38) 100%)}
+#hud{position:fixed;bottom:20px;left:25px;display:flex;align-items:center;gap:14px;user-select:none;filter:drop-shadow(0 2px 8px #0007)}
+#hud .eyebrow{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#bbccca;font-weight:700;opacity:.86}
+#hud .title{font-size:15px;letter-spacing:.04em;font-weight:600;color:#f4eee1;margin-top:3px}
+#hud .subtitle{font-size:10px;color:#93aaa9;margin-top:2px}
+#control{appearance:none;background:rgba(9,22,29,.75);border:1px solid #71878d77;border-radius:50%;width:39px;height:39px;color:#f4eee1;font-size:16px;cursor:pointer;transition:background .2s}
+#control:hover{background:#223944}#control:focus-visible{outline:2px solid #b3dacf;outline-offset:2px}
+#hint{position:fixed;right:25px;bottom:25px;color:#9db2b3b8;font-size:10px;letter-spacing:.035em;pointer-events:none}
+@media(max-width:620px){#hud{left:14px;bottom:15px;gap:10px}#hint{right:14px;bottom:14px;font-size:9px}#hud .title{font-size:12px}#hud .subtitle{display:none}#control{width:34px;height:34px}}
+</style>
+</head>
+<body>
+<canvas id="stage" aria-label="숲속의 작은 SF 군수공장. 전차가 공장에서 나와 마린을 놀라게 한 뒤 천천히 다시 들어간다. SCV는 끝없이 용접한다."></canvas>
+<div id="shade"></div>
+<div id="hud"><button id="control" aria-label="장면 일시정지" title="일시정지 (Space)">Ⅱ</button><div><div class="eyebrow">SCENE 01 / A SMALL OUTPOST</div><div class="title">Factory after hours</div><div class="subtitle">평화로운 군수공장 · 움직이는 작은 이야기</div></div></div>
+<div id="hint">SCENE 01 · V0.2 · NO AUDIO</div>
+<script>
+'use strict';
+// Standalone canvas/isometric visual prototype. No libraries, audio, or game assets.
+const canvas=document.getElementById('stage');
+const ctx=canvas.getContext('2d',{alpha:false});
+const button=document.getElementById('control');
+let w=0,h=0,ratio=1,scale=1,ox=0,oy=0;
+let playing=true,simTime=0,lastTime=0;
+// Deterministic QA: add ?phase=17.8 to inspect a specific moment, paused.
+const testPhase=new URLSearchParams(location.search).get('phase');
+if(testPhase!==null && Number.isFinite(Number(testPhase))){simTime=Math.max(0,Number(testPhase));playing=false;}
+const seed=20261105;
+function randomGen(a){return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+const rand=randomGen(seed);
+function rr(a,b){return a+(b-a)*rand();}
+function pick(a){return a[Math.floor(rand()*a.length)];}
+function clamp(a,l=0,r=1){return Math.max(l,Math.min(r,a));}
+function ease(t){t=clamp(t);return t*t*(3-2*t)}
+function step(a,b,t){return ease((t-a)/(b-a));}
+function lerp(a,b,t){return a+(b-a)*t}
+function rgba(hex,alpha){let c=hex.replace('#','');if(c.length===3)c=[...c].map(x=>x+x).join('');const n=parseInt(c,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${alpha})`;}
+function proj(x,z,y=0){return [ox+(x-z)*53*scale,oy+(x+z)*23*scale-y*47*scale]}
+function polygon(points,fill,stroke=null,lw=1){ctx.beginPath();points.forEach((p,i)=>{if(i===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1]);});ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.lineWidth=lw*scale;ctx.strokeStyle=stroke;ctx.stroke()}}
+function path(points,col,width=1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.strokeStyle=col;ctx.lineWidth=width*scale;ctx.lineCap='round';ctx.stroke();}
+function circle(x,y,r,fill,stroke=null,lw=1){ctx.beginPath();ctx.arc(x,y,r*scale,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.lineWidth=lw*scale;ctx.strokeStyle=stroke;ctx.stroke();}}
+function ellipse(x,y,rx,ry,fill,stroke=null,lw=1,rot=0){ctx.beginPath();ctx.ellipse(x,y,rx*scale,ry*scale,rot,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw*scale;ctx.stroke();}}
+function ringWorld(x,z,y,rad,col,stroke=null){let p=[];for(let j=0;j<20;j++){let a=j*Math.PI/10;p.push(proj(x+rad*Math.cos(a),z+rad*Math.sin(a),y))}polygon(p,col,stroke,1)}
+function glows(x,y,r,color,opacity=.5){ctx.save();ctx.globalCompositeOperation='screen';let g=ctx.createRadialGradient(x,y,0,x,y,r*scale);g.addColorStop(0,rgba(color,opacity));g.addColorStop(.25,rgba(color,opacity*.27));g.addColorStop(1,rgba(color,0));ctx.fillStyle=g;ctx.fillRect(x-r*scale,y-r*scale,2*r*scale,2*r*scale);ctx.restore()}
+function groundP(x,z,r=1.4,ang=0){let a=proj(x,z,0);ellipse(a[0],a[1],r*31,r*11,'#10181566',null,1,ang)}
+function prism(x,z,wx,wz,h,top='#6c7c83',right='#344550',front='#4e5b65',y0=0){let v=(xx,zz,yy)=>proj(xx,zz,yy);let a=v(x-wx/2,z-wz/2,y0),b=v(x+wx/2,z-wz/2,y0),c=v(x+wx/2,z+wz/2,y0),d=v(x-wx/2,z+wz/2,y0);let A=v(x-wx/2,z-wz/2,y0+h),B=v(x+wx/2,z-wz/2,y0+h),C=v(x+wx/2,z+wz/2,y0+h),D=v(x-wx/2,z+wz/2,y0+h);polygon([b,c,C,B],right,'#15252e',1);polygon([d,c,C,D],front,'#21313a',1);polygon([A,B,C,D],top,'#9aadb0',.9);return {a,b,c,d,A,B,C,D};}
+function faceZ(x,z,wx,by,ty,fill,stroke=null){polygon([proj(x-wx/2,z,by),proj(x+wx/2,z,by),proj(x+wx/2,z,ty),proj(x-wx/2,z,ty)],fill,stroke)}
+function faceX(x,z,wz,by,ty,fill,stroke=null){polygon([proj(x,z-wz/2,by),proj(x,z+wz/2,by),proj(x,z+wz/2,ty),proj(x,z-wz/2,ty)],fill,stroke)}
+function cylinder(x,z,y,r,height,color='#6a7780',top='#9caeb0'){let a=proj(x,z,y),b=proj(x,z,y+height);ellipse(a[0],a[1],r*41,r*17,'#2e3b43');polygon([[a[0]-r*41*scale,a[1]],[a[0]+r*41*scale,a[1]],[b[0]+r*41*scale,b[1]],[b[0]-r*41*scale,b[1]]],color);ellipse(b[0],b[1],r*41,r*17,top,'#d4c7a88a',.8)}
+function worldLine(x1,z1,y1,x2,z2,y2,col,width=2){path([proj(x1,z1,y1),proj(x2,z2,y2)],col,width)}
+function shadow(x,z,rx,rz){let a=proj(x,z,.04);ellipse(a[0],a[1],rx,rz,'rgba(1,5,10,.34)')}
+function fan(x,z,y,r,t){let p=proj(x,z,y);ellipse(p[0],p[1],r*43+5,r*16+4,'#202f39','#aab8b5',2);ellipse(p[0],p[1],r*39,r*13,'#15272d','#455f67',1);for(let i=0;i<4;i++){let a=t*1.8+i*Math.PI/2,cs=Math.cos(a),sn=Math.sin(a);polygon([[p[0]+cs*5*scale,p[1]+sn*2*scale],[p[0]+(-sn*26+cs*8)*r*scale,p[1]+(cs*9+sn*3)*r*scale],[p[0]+(sn*18+cs*10)*r*scale,p[1]+(-cs*7+sn*4)*r*scale]],'#627984')}ellipse(p[0],p[1],r*6,r*3,'#c8d2ca')}
+function stripesZ(x,z,wx,by,ty,num=6){for(let i=0;i<num;i++){const px=x-wx/2+(i+.5)*wx/num;worldLine(px,z,by,px,z,ty,(i%2?'#caa25d':'#27343a'),1.9)}}
+function tinyLight(x,z,y,col='#eac077',radius=2.5){let p=proj(x,z,y);circle(p[0],p[1],radius,col);glows(...p,20,col,.38)}
+const groundColor=['#3c443d','#343b36','#4b4d42','#3f463e','#43453b','#2c3936'];
+const speckles=[];for(let i=0;i<1200;i++)speckles.push({x:rr(-6.1,6.1),z:rr(-5.8,6.2),r:rr(.4,2.0),c:pick(groundColor),a:rr(.07,.20)});
+const trees=[];
+function tree(x,z,r,hue='green',deep=false){let leaves=[];for(let i=0;i<35;i++){let ang=rr(0,Math.PI*2),rad=rr(0,r*1.28);leaves.push({dx:Math.cos(ang)*rad,dz:Math.sin(ang)*rad*.67,rad:rr(.30,.72)*r,shade:rr(0,1)});}return {x,z,r,hue,leaves,deep};}
+for(let i=0;i<160;i++){let xx=rr(-11,10),zz=rr(-10,10);if(Math.abs(xx)<5.9&&Math.abs(zz)<5.6)continue;trees.push(tree(xx,zz,rr(.55,1.25),'green',true));}
+for(let i=0;i<54;i++){let zz=rr(-6.6,6.9),xx=rr(-7.9,-5.8);trees.push(tree(xx,zz,rr(.60,1.35),'green',false));}
+for(let i=0;i<42;i++){let xx=rr(-7.5,7.9),zz=rr(5.2,7.2);trees.push(tree(xx,zz,rr(.65,1.24),'green',false));}
+function drawTree(t,time){let p=proj(t.x,t.z,-.1),r=t.r,sl=1.52;let sway=Math.sin(time*.21+t.x*5+t.z)*.05;let leafCenter=proj(t.x+sway,t.z,sl*r);let trunk=proj(t.x,t.z,0);path([trunk,leafCenter],'#142924',Math.max(2,r*4.2));const colors=t.deep?['#081b1a','#09221e','#102b22','#17382a','#143125']:['#0a201d','#102d23','#193b2b','#24432d','#1b3829'];for(let i=0;i<t.leaves.length;i++){const b=t.leaves[i],px=leafCenter[0]+(b.dx-b.dz)*20*scale,py=leafCenter[1]+(b.dx+b.dz)*6.8*scale;ellipse(px,py,24*b.rad,14*b.rad,colors[Math.min(colors.length-1,Math.floor(b.shade*colors.length))]);if(b.shade>.82)ellipse(px-5*scale,py-2*scale,6*b.rad,2.6*b.rad,'rgba(86,115,72,.085)')}
+}
+function paintCliffs(){const top=[[-6.0,-5.1],[-3.2,-6.0],[3.7,-5.9],[6.35,-3.0],[6.55,3.9],[4.9,5.7],[-3.9,5.7],[-6.25,3.4]];
+// Large irregular tapered island: both visible front faces are layered rock.
+let bot=top.map(([x,z],i)=>proj(x,z,-1.9-(i%3)*.21));let upper=top.map(([x,z])=>proj(x,z,0));
+for(let i=0;i<top.length;i++){if(i<3||i>7)continue;let j=(i+1)%top.length;polygon([upper[i],upper[j],bot[j],bot[i]],i%2?'#233540':'#243742','#091d28',1.1);let a=upper[i],b=upper[j],c=bot[j],d=bot[i];for(let s=0;s<6;s++){let f=(s+.3)/6;let xx=lerp(a[0],b[0],f),yy=lerp(a[1],b[1],f);path([[xx,yy+(5+s%3*3)*scale],[xx+(s%2?-6:7)*scale,yy+(39+s%3*13)*scale]],rgba('#405363',.19+(s%3)*.045),.8+s%2*.5);} }
+polygon(upper,'#3e443c','#526056',1.1);
+// Fine ground grit follows world coordinates, clipped by plateau outline.
+ctx.save();ctx.beginPath();upper.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.clip();for(const s of speckles){let p=proj(s.x,s.z,.015);ellipse(p[0],p[1],s.r*3,s.r*.95,rgba(s.c,s.a))}
+for(let i=0;i<45;i++){let k=i/45;let a=proj(-5.3+11*k,3.9,.02),b=proj(-5.2+11*k,4.08,.02);path([a,b],rgba('#b5ad85',.04),rr(1,3))}
+ctx.restore();return upper;}
+function warmPools(){const lights=[{x:1.3,z:-1.3,r:190,a:.49},{x:-3.0,z:-2.4,r:130,a:.34},{x:-2.8,z:2.0,r:75,a:.06}];ctx.save();ctx.beginPath();const pts=[[-6,-5.1],[-3.2,-6],[3.7,-5.9],[6.35,-3],[6.55,3.9],[4.9,5.7],[-3.9,5.7],[-6.25,3.4]].map(q=>proj(...q));pts.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.clip();for(let l of lights){let p=proj(l.x,l.z,0),g=ctx.createRadialGradient(...p,0,...p,l.r*scale);g.addColorStop(0,rgba('#d99b51',l.a));g.addColorStop(.42,rgba('#b77639',l.a*.32));g.addColorStop(1,rgba('#e79d3a',0));ctx.fillStyle=g;ctx.fillRect(p[0]-l.r*scale,p[1]-l.r*scale,l.r*2*scale,l.r*2*scale)}ctx.restore();}
+function stoneScatter(){for(let i=0;i<78;i++){let r=randomGen(i*211+313);let x=r()*17-8.5,z=r()*17-8.5;if(Math.abs(x)<5.9 && Math.abs(z)<5.8)continue;let p=proj(x,z,-1.45);const sz=.15+r()*.4;polygon([[p[0]-sz*20*scale,p[1]],[p[0]-sz*4*scale,p[1]-sz*16*scale],[p[0]+sz*23*scale,p[1]-sz*4*scale],[p[0]+sz*8*scale,p[1]+sz*8*scale]],'#243b3b','#152a31',.6)}}
+function metalBase(x,z,wx,wz){ringWorld(x,z,.015,Math.max(wx,wz)*.6,'rgba(18,28,32,.55)');prism(x,z,wx,wz,.21,'#56636a','#37434a','#45525c');}
+function supply(x,z,t){shadow(x,z,35,14);metalBase(x,z,2.0,1.95);prism(x,z,1.8,1.75,.67,'#748087','#2d3c42','#43505b',.22);cylinder(x,z,.91,.85,.62,'#64747e','#849398');ringWorld(x,z,1.58,.70,'#34454e','#bac8bd');let p=proj(x,z,1.6);for(let i=0;i<6;i++){let a=i*Math.PI/3;ellipse(p[0]+Math.cos(a)*21*scale,p[1]+Math.sin(a)*9*scale,3,2,'#b4ac8f')}
+fan(x,z,1.64,.38,t);stripesZ(x,z+1.0,1.28,.20,.34,7);tinyLight(x+.55,z+.96,.53,'#8bc96d',2);}
+function armory(x,z,t){shadow(x,z,50,20);metalBase(x,z,2.45,1.88);prism(x,z,2.3,1.65,1.68,'#8d8a7a','#45505a','#4c5459',.20);prism(x-.25,z-.28,1.42,.85,.75,'#66707a','#303b44','#43515c',1.88);
+// Upright mechanical chimneys and warm windows.
+for(let i=0;i<2;i++){let px=x-.65+i*1.15,pz=z-.45;cylinder(px,pz,1.86,.16,1.45,'#3f4e55','#869292');ellipse(...proj(px,pz,3.34),6,3.2,'#15252c','#c2a57b',1);}
+faceZ(x,z+.83,.65,.63,1.37,'#d88c3e','#e1ab69');for(let i=0;i<3;i++)faceX(x+1.15,z-.48+i*.43,.17,.35,1.05,i%2?'#b9793c':'#f5bd61');tinyLight(x-.6,z+.89,.81,'#d8a35d',1.6);fan(x-.25,z-.27,2.64,.30,t*.7);glows(...proj(x,z+.7,1.2),95,'#d78e45',.18);
+}
+function factory(x,z,t){shadow(x,z,77,30);metalBase(x,z,3.65,2.75);prism(x,z,3.55,2.65,1.98,'#83919a','#334752','#4d5961',.22);prism(x+.1,z-.54,2.9,1.25,.48,'#71818b','#4b5c66','#64727c',2.2);
+// Big industrial latches and layered roof ribs.
+for(let i=0;i<5;i++){let xx=x-1.45+i*.7;worldLine(xx,z-.99,2.74,xx,z+.04,2.74,'#b6c3b7',.9)}
+// Front exit portal uses dark inset & orange inner glow, painted on z+ facade.
+const gateZ=z+1.345;faceZ(x,gateZ,2.04,.27,1.83,'#15242b','#b1a991');faceZ(x,gateZ+.008,1.60,.28,1.59,'#241e1a','#6c6660');faceZ(x,gateZ+.01,1.22,.29,1.37,'#c58b52');faceZ(x,gateZ+.025,.98,.29,1.29,'#24282a');for(let i=0;i<4;i++)worldLine(x-.46+i*.31,gateZ+.027,.33,x-.46+i*.31,gateZ+.027,1.25,'#3b4247',1.3);
+for(let s of [-1,1]){prism(x+s*1.47,gateZ+.09,.28,.33,1.52,'#aeb4aa','#66737a','#72808a',.3);tinyLight(x+s*1.46,gateZ+.28,1.35,'#eeb867',1.9)}
+// Angled roof ventilator and two smoke pipes.
+fan(x-.74,z-.34,2.75,.47,t*1.1);cylinder(x+1.07,z-.6,2.48,.17,.9,'#58656a','#899491');cylinder(x+.72,z-.99,2.48,.13,1.14,'#52646a','#8e9695');
+for(let i=0;i<3;i++){faceX(x+1.78,z-1.00+i*.75,.27,.70,1.45,i===1?'#79b59a':'#bf8b46')}
+for(let i=0;i<5;i++)worldLine(x-1.48+i*.73,z+1.38,.17,x-1.48+i*.73,z+1.38,.38,'#9a9f8c',1.3);glows(...proj(x,gateZ,1.1),125,'#e7a45b',.20);
+}
+function shop(x,z,t){shadow(x,z,45,18);metalBase(x,z,1.9,1.95);prism(x,z,1.72,1.7,1.35,'#8a969b','#42515a','#586269',.23);prism(x-.1,z-.12,1.38,.98,.34,'#697b80','#364953','#4b5d64',1.58);fan(x-.1,z-.14,1.94,.50,t);faceZ(x,z+.86,1.09,.58,1.0,'#1c4141','#609b87');for(let i=0;i<4;i++)tinyLight(x-.44+i*.28,z+.9,.42,i%2?'#b7d35e':'#66d7a6',.8);}
+function bunkerFrame(x,z,t){shadow(x,z,33,14);let c=[[x-.85,z-.72],[x+.85,z-.72],[x+.85,z+.72],[x-.85,z+.72]];polygon(c.map(q=>proj(...q,.03)),'#344447','#9aa9a3',1.1);for(let i=0;i<4;i++){let q=c[i];let p=proj(q[0],q[1],.13),p2=proj(q[0],q[1],.55);worldLine(q[0],q[1],.10,q[0],q[1],.56,'#8d9994',4);circle(...p2,2.1,'#c6c2aa');}
+for(let k=0;k<2;k++){let z0=z-.55+k*1.05;worldLine(x-.77,z0,.49,x+.77,z0,.49,'#849692',2.4)}for(let k=0;k<3;k++){let x0=x-.55+k*.52;worldLine(x0,z-.64,.48,x0,z+.64,.48,'#576d72',1.9)}
+for(let i=0;i<3;i++){let p=proj(x+(i-1)*.21,z+(i%2-.5)*.23,.3);ellipse(...p,4,2,'#3d474a')}
+}
+// Independent articulated gestures. All units remain small in the diorama,
+// so use silhouette and readable timing rather than exaggerated cartoon physics.
+function marine(x,z,t,index=0,react=0,watch=0){
+ const idle=Math.sin(t*(.52+index*.11)+index*2.2);
+ const isLead=index===0;
+ const shift=isLead?react*.24:0;
+ const xx=x-shift,zz=z+shift*.75;
+ shadow(xx,zz,11,4);
+ const bend=react*.10;
+ // Boots are planted until the startled half-step. No teleport at loop boundary.
+ worldLine(xx-.16,zz-.07,.12,xx-.24-react*.10,zz+.11+react*.08,.06,'#283e45',5.8);
+ worldLine(xx+.16,zz-.07,.12,xx+.24,zz+.11,.06,'#283e45',5.8);
+ worldLine(xx-.15,zz,.22,xx-.16-react*.04,zz,.64,'#46645f',7);
+ worldLine(xx+.15,zz,.22,xx+.16,zz,.64,'#46645f',7);
+ const torso=proj(xx+react*.05,zz,.80+bend+idle*.014),baseColor=index?'#47776e':'#578478';
+ ellipse(torso[0],torso[1],13,10,baseColor,'#a3b8a5',1);
+ ellipse(torso[0],torso[1]-2*scale,9,7,'#739d91');
+ // Helmet glance stays after the initial surprise and follows the departing tank.
+ const look=watch*(isLead?1:.17);
+ const helmet=proj(xx+.055*idle+look*.11,zz-.06*look,.99+bend);
+ ellipse(...helmet,12,9,'#688d84','#bbcab7',1.1);
+ ellipse(helmet[0]+look*2.1*scale,helmet[1]-1.4*scale,8,4,'#193943');
+ circle(helmet[0]+(1.5+look*4.5)*scale,helmet[1]-.9*scale,2.1,'#a5d8bf');
+ // Shoulder plates and gauss rifle move as one small startled gesture.
+ worldLine(xx-.24,zz,.83+bend,xx-.29,zz+.20,.57+react*.15,'#698b80',5.4);
+ worldLine(xx+.24,zz,.83+bend,xx+.28,zz+.19,.56+react*.15,'#698b80',5.4);
+ const gunY=.54+react*.20;
+ worldLine(xx-.45,zz+.20,gunY,xx+.46,zz+.16,gunY,'#18272d',4.0);
+ worldLine(xx+.17,zz+.18,gunY,xx+.46,zz+.16,gunY,'#a1a68d',2);
+ // Subtle warm reflection from factory door when the tank nears.
+ if(isLead && react>.1){const p=proj(xx+.08,zz,1.17+bend);circle(...p,2.2,rgba('#e4bb79',react*.44))}
+}
+// Turret actually rotates in world XZ space, chassis stays fixed. Angle zero
+// points toward positive Z (factory exit); negative turns toward the guard.
+function tank(x,z,t,alpha=1,turretAngle=0,travel=0){
+ if(alpha<=0)return;
+ ctx.save();ctx.globalAlpha=alpha;
+ shadow(x,z,44,13);
+ const r=(u,v,y)=>proj(x+u*Math.cos(turretAngle)+v*Math.sin(turretAngle),z-u*Math.sin(turretAngle)+v*Math.cos(turretAngle),y);
+ // Left/right tracked hull with moving track segments, no wheelspin at idle.
+ prism(x-.58,z,.62,1.69,.37,'#39464b','#26343c','#293840',.13);
+ prism(x+.58,z,.62,1.69,.37,'#39464b','#26343c','#293840',.13);
+ for(let i=-3;i<=3;i++){
+   const zz=z+i*.21+travel*.065;
+   if(zz>z+.78 || zz<z-.78)continue;
+   worldLine(x-.85,zz,.19,x-.34,zz,.19,'#89908a',1.6);
+   worldLine(x+.34,zz,.19,x+.85,zz,.19,'#89908a',1.6);
+ }
+ prism(x,z,1.42,1.59,.49,'#94968b','#49545e','#69777f',.27);
+ // Sloped armor nose, two front lamps, raised rotating turret.
+ polygon([proj(x-.46,z+.78,.72),proj(x+.46,z+.78,.72),proj(x+.33,z+.92,.35),proj(x-.33,z+.92,.35)],'#5f6c6e','#bac0ab',1);
+ for(const sx of [-1,1])tinyLight(x+sx*.58,z+.68,.49,'#d2b476',1.2);
+ cylinder(x,z-.16,.85,.48,.17,'#45545b','#8d9893');
+ const a=r(-.44,-.47,1.12),b=r(.44,-.47,1.12),c=r(.42,.44,1.12),d=r(-.42,.44,1.12);
+ const A=r(-.36,-.37,1.42),B=r(.36,-.37,1.42),C=r(.31,.30,1.42),D=r(-.31,.30,1.42);
+ polygon([b,c,C,B],'#46565e','#26353b',1);
+ polygon([d,c,C,D],'#57686b','#26353b',1);
+ polygon([A,B,C,D],'#89958d','#c2c7b4',1);
+ // Two independently placed barrels visibly sweep through the turn.
+ for(const off of [-.19,.19]){
+   path([r(off,.27,1.40),r(off,.96,1.42)],'#27363c',7.1);
+   path([r(off,.29,1.46),r(off,.96,1.48)],'#afb6a6',2.3);
+   const muzzle=r(off,.97,1.45);ellipse(...muzzle,2.9,2.0,'#1c292f','#a0a596',.8);
+ }
+ // A tiny commander hatch makes the direction of turret travel legible.
+ const hatch=r(-.12,-.20,1.44);ellipse(...hatch,7.6,3.4,'#3b4b50','#b8b8a1',.8);
+ ctx.restore();
+}
+function scv(x,z,t){
+ // Three work spots, with short deliberate transitions; construction never advances.
+ const spots=[{x:x,z:z},{x:x-.38,z:z-.12},{x:x-.20,z:z+.26}];
+ const run=t%18,seg=Math.floor(run/6),local=run%6;
+ const from=spots[seg],to=spots[(seg+1)%3],move=step(4.1,5.6,local);
+ const xx=lerp(from.x,to.x,move),zz=lerp(from.z,to.z,move);
+ const working=(local<3.9 || local>5.8);
+ shadow(xx,zz,15,6);
+ const hover=.10+Math.sin(t*2.1)*.033;
+ const p=proj(xx,zz,hover+.53);
+ ellipse(...p,15,12,'#998e61','#e0c99b',1);
+ ellipse(p[0],p[1]-3*scale,10,7,'#3e6269','#b6d8d2',1);
+ ellipse(...proj(xx-.35,zz,.30),7,4,'#526c72');
+ ellipse(...proj(xx+.35,zz,.30),7,4,'#526c72');
+ // Tool points inside the scaffold instead of sparking into empty space.
+ const targetX=3.91+[-.12,.28,-.43][seg],targetZ=2.18+[.52,.32,.10][seg];
+ const aim=Math.sin(t*4.8)*.04;
+ worldLine(xx-.14,zz,.61,xx-.41,zz+.23,.33,'#b4aa79',5.2);
+ worldLine(xx+.17,zz,.64,targetX+aim,targetZ,.31,'#d0b679',5.4);
+ const tip=proj(targetX+aim,targetZ,.31);
+ circle(...tip,3.1,'#ffcb87');
+ const sparkPhase=(t*1.32)%1.56;
+ if(working && sparkPhase<.32){
+  const amount=(1-sparkPhase/.32)*Math.min(1,(.32-sparkPhase)*6);
+  glows(...tip,34,'#edbc75',.54*amount);
+  for(let i=0;i<6;i++){
+   const a=i*2.40+t*13,rad=(6+i*1.6)*amount;
+   path([[tip[0],tip[1]],[tip[0]+Math.cos(a)*rad*scale,tip[1]+Math.sin(a)*rad*scale]],rgba(i%2?'#ffc67c':'#dcf2d2',amount),1.5);
+  }
+ }
+}
+const fireflies=[];for(let i=0;i<34;i++)fireflies.push({x:rr(-9,9),z:rr(-8,8),y:rr(.3,3.0),s:rr(.5,1.6),v:rr(.22,.8),phase:rr(0,Math.PI*2)});
+function floating(t){for(const f of fireflies){let p=proj(f.x+Math.sin(t*f.v+f.phase)*.15,f.z+Math.cos(t*f.v*.6+f.phase)*.15,f.y);let q=(Math.sin(t*f.v*2+f.phase)+1)/2;circle(p[0],p[1],f.s*(.28+.42*q),rgba('#a5d58c',.08+.55*q));if(q>.8)glows(...p,13,'#a5df87',.23*q)}}
+const smoke=[];for(let i=0;i<12;i++)smoke.push({p:rr(0,1),offset:rr(-.24,.24),sz:rr(.35,.75)});
+function exhaust(x,z,y,t){let anchor=proj(x,z,y);for(let i=0;i<smoke.length;i++){const s=smoke[i],phase=(s.p+t*.055)%1;let px=anchor[0]+(s.offset+Math.sin(phase*2.3+i)*.16)*30*scale,py=anchor[1]-phase*116*scale;ellipse(px,py,lerp(5,18,phase)*s.sz,lerp(3,12,phase)*s.sz,rgba('#a5b5ae',(.14*(1-phase))));}}
+
+function rockWall(){
+  // A heavily faceted, mossy stone face at the left edge of the forest.
+  const X=v=>w*.5+(v-720)*scale, Y=v=>h*.5+(v-405)*scale;
+  const coords=[[44,124],[195,87],[286,130],[327,224],[308,338],[259,411],[196,457],[129,431],[79,344]];
+  polygon(coords.map(p=>[X(p[0]),Y(p[1])]),'#1b3034','#344750',1);
+  const faces=[{p:[[44,124],[195,87],[181,266],[79,344]],c:'#253b3d'},
+               {p:[[195,87],[286,130],[251,270],[181,266]],c:'#2b4041'},
+               {p:[[286,130],[327,224],[308,338],[251,270]],c:'#192e34'},
+               {p:[[79,344],[181,266],[196,457],[129,431]],c:'#213941'},
+               {p:[[181,266],[251,270],[259,411],[196,457]],c:'#293b41'},
+               {p:[[251,270],[308,338],[259,411]],c:'#172a33'}];
+  for(let f of faces) polygon(f.p.map(p=>[X(p[0]),Y(p[1])]),f.c,'#142b32',1);
+  for(let i=0;i<26;i++){
+    let r=randomGen(920+i*43);let xx=76+r()*225,yy=100+r()*300,sz=8+r()*18;
+    path([[X(xx),Y(yy)],[X(xx+sz*.4),Y(yy+sz*.6)],[X(xx+sz*.13),Y(yy+sz*1.2)]],rgba('#6e7770',.12+r()*.14),.6+r());
+  }
+  for(let i=0;i<35;i++){
+    let r=randomGen(716+i*33),xx=X(76+r()*220),yy=Y(100+r()*280);
+    ellipse(xx,yy,4+r()*14,3+r()*5,rgba(pick(['#1e4030','#31523a','#254b37']),.30+r()*.26));
+  }
+}
+function naturalAccents(t){
+ // Soft mossy patches and small embedded stones in the open ground, rather than a flat paved plaza.
+ let r=randomGen(5543);
+ for(let i=0;i<200;i++){
+   let x=(r()-.5)*11,z=(r()-.5)*10;
+   let p=proj(x,z,.02),sz=4+r()*27;
+   ellipse(p[0],p[1],sz,sz*.31,rgba(r()>.5?'#52634b':'#293f35',.025+r()*.055));
+ }
+ for(let i=0;i<110;i++){
+   let x=(r()-.5)*11,z=(r()-.5)*9.7,p=proj(x,z,.04),sz=1+r()*6;
+   polygon([[p[0]-sz*scale,p[1]],[p[0]-sz*.3*scale,p[1]-sz*.5*scale],[p[0]+sz*.8*scale,p[1]]],rgba('#899287',.08+r()*.1));
+ }
+}
+function drawWorld(t){ctx.fillStyle='#08131a';ctx.fillRect(0,0,w,h);let sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#06121e');sky.addColorStop(.50,'#0e2329');sky.addColorStop(1,'#0a1c20');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+// Subtle scattered stars and deep forest foliage.
+let sr=randomGen(671);for(let i=0;i<100;i++){let sx=sr()*w,sy=sr()*h*.55;circle(sx,sy,sr()*.85,rgba('#bad9d8',sr()*.42));}
+ctx.save();ctx.globalAlpha=.65;for(let i=0;i<17;i++){let gx=(i%6)*w/5,gy=(Math.floor(i/6))*h*.3;glows(gx,gy,230,'#102d2d',.17)}ctx.restore();
+const treeFront=[];for(const tr of trees){if(tr.x+tr.z<1.5)drawTree(tr,t);else treeFront.push(tr)}
+stoneScatter();rockWall();paintCliffs();naturalAccents(t);warmPools();
+// Small terrain tufts and pebbles.
+let gr=randomGen(1998);for(let i=0;i<390;i++){let xx=rrdet(gr,-5.5,5.5),zz=rrdet(gr,-5.2,5.2);let p=proj(xx,zz,.015);if(gr()<.2){ellipse(...p,gr()*5+1,gr()*1.3+.5,rgba('#9d9888',.05+gr()*.1))}else{let k=gr();path([[p[0],p[1]],[p[0]+(k-.5)*5*scale,p[1]-(1+k*3)*scale]],rgba('#7c9272',.1+gr()*.12),.7)}}
+// Back buildings and large foreground elements are sorted approximately by depth.
+supply(-3.55,-.92,t);armory(-3.5,-3.45,t);factory(.55,-3.0,t);shop(3.54,-2.94,t);
+exhaust(.55+1.07,-3.6,3.36,t);exhaust(-3.5-.65,-3.9,3.30,t);
+// Machine-shop and factory floor footlights.
+for(let i=0;i<4;i++)tinyLight(-.4+i*.58,-1.34,.08,'#d1a25e',.8);
+// Separate ambient actors (reactions occur independently of background looping).
+const phase=t%35;
+let dist=0;
+if(phase>=8&&phase<14.8){dist=step(8,14.8,phase)}
+else if(phase>=14.8&&phase<20.8){dist=1}
+else if(phase>=20.8&&phase<29.2){dist=1-step(20.8,29.2,phase)};
+const react=step(14.48,14.85,phase)*(1-step(16.0,17.55,phase));
+const watch=step(14.5,15.1,phase)*(1-step(25.3,27.4,phase));
+// Lead guard is on the tank's left, so turret swivels anticlockwise, looks,
+// hesitates, then straightens BEFORE reversing into the factory.
+const maxLook=-.82;
+const turretTurn=step(15.40,17.15,phase)*(1-step(18.5,20.45,phase));
+const turretAngle=maxLook*turretTurn;
+const tankZ=-1.30+dist*2.38;
+tank(.55,tankZ,t,clamp((tankZ+1.38)/.44),turretAngle,dist);
+marine(-1.52,2.18,t,0,react,watch);marine(-3.15,1.45,t,1,0,watch);
+bunkerFrame(3.91,2.18,t);scv(4.48,2.95,t);
+// Near-screen plants: silhouettes frame scene and give reference-like depth.
+for(const tr of treeFront)drawTree(tr,t);
+floating(t);
+// Artistic color grading / vignette, stays subtle to preserve model legibility.
+let vign=ctx.createRadialGradient(w*.54,h*.47,w*.16,w*.54,h*.47,w*.74);vign.addColorStop(0,'rgba(0,0,0,0)');vign.addColorStop(1,'rgba(0,5,10,.78)');ctx.fillStyle=vign;ctx.fillRect(0,0,w,h);
+}
+function rrdet(r,a,b){return a+(b-a)*r()}
+function resize(){const dpr=Math.min(devicePixelRatio||1,2);w=window.innerWidth;h=window.innerHeight;canvas.width=Math.floor(w*dpr);canvas.height=Math.floor(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);scale=Math.min(w/1440,h/810)*1.03;ox=w*.53;oy=h*.45;}
+window.addEventListener('resize',resize);
+function animate(now){if(!lastTime)lastTime=now;let dt=Math.min((now-lastTime)/1000,.08);lastTime=now;if(playing)simTime+=dt;drawWorld(simTime);requestAnimationFrame(animate)}
+function toggle(){playing=!playing;button.textContent=playing?'Ⅱ':'▶';button.title=playing?'일시정지 (Space)':'재생 (Space)';button.setAttribute('aria-label',button.title)}
+button.addEventListener('click',toggle);window.addEventListener('keydown',e=>{if(e.code==='Space'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){e.preventDefault();toggle()}});
+if(!playing){button.textContent='▶';button.setAttribute('aria-label','장면 재생');button.title='재생 (Space)';}
+resize();requestAnimationFrame(animate);
+</script>
+</body>
+</html>
