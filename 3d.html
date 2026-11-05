@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071318">
-<title>Factory After Hours · 3D Study v0.4</title>
+<title>Factory After Hours · 3D Model Pass v0.5</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071318;color:#ecf2eb}
@@ -22,8 +22,8 @@
 </head>
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
-<div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><div><div class="eyebrow">SCENE 01 / 3D MODEL STUDY</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div></div></div>
-<div id="badge">V0.4 · 3D EXPERIMENT · NO AUDIO</div><div id="progress"></div>
+<div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><div><div class="eyebrow">SCENE 01 / BROOD WAR MODEL PASS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div></div></div>
+<div id="badge">V0.5 · BROOD WAR STUDY · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
@@ -103,32 +103,80 @@ function buildLandscape(b){b.box(0,-3.8,0,34,.1,30,'#0b2023','#0d2227');polyTerr
  // Small industrial path, with breaks between the pads and forest ground.
  for(let i=0;i<11;i++){b.box(.4,.15,-1.25+i*.27,2.2,.025,.10,i%2?'#5a5f57':'#4a554e','#515950')}
 }
+
+function armorWedge(b,x,y,z,baseW,topW,h,baseD,topD,top='#899b9b',side='#526771'){
+ const by=y-h/2,ty=y+h/2,B=[[-baseW/2,by,-baseD/2],[baseW/2,by,-baseD/2],[baseW/2,by,baseD/2],[-baseW/2,by,baseD/2]],T=[[-topW/2,ty,-topD/2],[topW/2,ty,-topD/2],[topW/2,ty,topD/2],[-topW/2,ty,topD/2]];
+ b.push(x,0,z);b.quad(T[0],T[3],T[2],T[1],top);for(let k=0;k<4;k++){let j=(k+1)%4;b.quad(B[k],B[j],T[j],T[k],side);}b.pop();
+}
+function axialWheel(b,x,y,z,r,color='#536369'){
+ b.push(x,y,z,0,0,Math.PI/2);b.cylinder(0,0,0,r,.085,color,'#95a9a5',10);b.cylinder(0,.053,0,r*.47,.04,'#303e47','#667b7a',8);b.pop();
+}
+function warningMark(b,x,y,z,width=.5){
+ for(let i=0;i<5;i++)b.box(x-width*.43+i*width*.21,y,z,.075,.09,.035,i%2?'#e3b366':'#35444b','#515d5a');
+}
 function rivets(b,x,z,y,dir=0,ct=5){for(let i=0;i<ct;i++){let a=-.45+(i/(ct-1))*.9; b.box(x+(dir?0:a),y,z+(dir?a:0),.07,.06,.07,'#b4a79a','#9d9c95')}}
 function fan(b,x,y,z,r,t){b.cylinder(x,y-.04,z,r*1.28,.14,'#3d5860','#9cadad',12);b.cylinder(x,y+.025,z,r,.07,'#213640','#314b4c',12);
  b.push(x,y+.08,z,t*1.62);for(let j=0;j<4;j++){b.push(0,0,0,j*Math.PI/2);b.box(0,.045,r*.40,r*.48,.08,r*.82,'#889899','#6b898c');b.pop();}b.cylinder(0,.13,0,r*.16,.2,'#52666b','#bbbcad',8);b.pop()}
 const props={};
-function factory(b){const x=.55,z=-2.95;b.push(x,0,z);b.box(0,1.20,0,3.85,2.14,2.92,'#808f94','#4b5d66','#303f46');b.box(.02,2.40,-.56,3.35,.42,1.30,'#627681','#445960');
- b.box(0,1.08,1.55,2.15,1.65,.13,'#29343a','#263039');b.box(0,1.07,1.64,1.65,1.27,.045,'#1d2c31','#1e2c30');
- // Reinforced opening, hazard bars, inner warm halo.
- b.box(0,.47,1.68,1.4,.11,.08,'#ccaa6d','#675a42');
- for(let i=0;i<6;i++){b.box(-.60+i*.24,.77,1.69,.06,.58,.03,'#576770','#364750')}
- for(let s of [-1,1]){b.box(s*1.08,1.1,1.70,.24,1.82,.30,'#9baca8','#56666e');for(let j=0;j<5;j++)b.box(s*1.08,.42+j*.35,1.87,.055,.07,.055,'#c5bd9f','#807e69');b.box(s*1.06,1.68,1.89,.15,.17,.12,'#f0b65f','#9d7842');}
- for(let i=0;i<6;i++){b.box(-1.61+i*.65,2.68,-.58,.065,.075,1.4,'#9daea8','#65767e')}
- for(let i=0;i<3;i++)b.box(1.945,1.08,-.86+i*.64,.09,.54,.22,'#689d86','#305a58');
- for(let s of [-1,1])b.cylinder(s*.85,3.08,-.95,.17,.8,'#5e6b6e','#9baba4',10);
- b.box(-1.48,2.45,-.42,.45,.44,.65,'#4d6068','#536b72');
- b.box(1.33,.35,1.22,.20,.17,.47,'#b5a15f','#78613e');
+function factory(b){const x=.55,z=-2.95;b.push(x,0,z);
+ // Brood War-inspired squat rectangular hull, roof ridge and plated industrial ribs.
+ b.box(0,1.2,0,3.85,2.14,2.92,'#72838a','#42565e','#33424a');
+ b.box(0,2.37,-.54,3.30,.43,1.55,'#627783','#455a62');
+ b.box(0,2.64,-.83,2.60,.15,.92,'#99a7a4','#536770');
+ armorWedge(b,0,2.66,.37,3.48,3.04,.45,1.22,.86,'#788a8a','#4c626a');
+ // Massive gabled blast door frame: the animated shutters remain separately controlled.
+ b.box(0,1.13,1.55,2.22,1.84,.13,'#273943','#2e4048');
+ b.box(0,1.08,1.64,1.66,1.36,.05,'#1b2d35','#19282f');
+ b.box(0,.37,1.75,2.42,.22,.32,'#66767b','#34434b');
+ for(let s of [-1,1]){
+  b.box(s*1.14,1.14,1.62,.29,1.98,.34,'#93a4a2','#53676e');
+  b.box(s*1.43,1.30,1.20,.36,1.67,.31,'#6e8286','#42545c');
+  b.box(s*1.80,.49,1.08,.30,.35,.72,'#697e82','#43535c');
+  b.box(s*1.14,1.65,1.84,.13,.20,.11,'#eeb56c','#af7644');
+  for(let j=0;j<6;j++)b.box(s*1.15,.44+j*.29,1.82,.065,.075,.07,'#b2bab1','#71817d');
+  b.box(s*.84,2.76,-.58,.34,.14,1.48,'#9aa8a5','#55676d');
+ }
+ warningMark(b,0,.43,1.89,1.30);
+ for(let j=0;j<5;j++)b.box(-1.65+j*.75,2.58,-.96,.07,.09,1.22,'#a2b2b0','#55656e');
+ for(let i=0;i<3;i++){b.box(1.96,.89+i*.46,-.69,.07,.12,.32,'#5ad99a','#245953');b.box(1.95,.78+i*.46,-.88,.09,.08,.08,'#a8d0ab','#54736e');}
+ // Two broad capped exhaust stacks and clamp bolts on wall.
+ for(let s of [-1,1]){b.cylinder(s*.9,3.13,-.99,.23,.95,'#53656b','#92a6a0',10);b.cylinder(s*.9,3.60,-.99,.30,.11,'#637980','#a6b5ae',10);}
+ for(let j=0;j<8;j++)b.box(-1.71+j*.46,.98,-1.51,.10,.34,.08,j%2?'#4e646d':'#6a8185','#455963');
+ b.box(-1.51,2.52,-.33,.48,.50,.66,'#526770','#3e545b');
+ b.box(1.35,.30,1.26,.28,.23,.56,'#bcb37d','#746c49');
  b.pop()}
-function armory(b){b.push(-3.52,0,-3.42);b.box(0,1.23,0,2.45,2.10,1.83,'#777e79','#4b5858');b.box(-.28,2.64,-.28,1.75,.98,1.23,'#7a8482','#4f5f61');
- for(let x of [-.69,.69]){b.cylinder(x,3.45,-.3,.22,1.26,'#455962','#99a3a1',9);b.cylinder(x,4.10,-.3,.27,.13,'#5b6b70','#91a8a3',10)}
- for(let i=0;i<3;i++)b.box(-.42+i*.46,1.18,.96,.26,.55,.10,i===1?'#c78138':'#a66c3a','#7b552f');
- for(let i=0;i<4;i++)b.box(1.23,.65+i*.30,.13,.08,.08,1.25,i%2?'#b28b56':'#81968c');b.pop()}
-function supply(b){b.push(-3.48,0,-.87);b.box(0,.45,0,2.07,.68,2.09,'#566870','#3f5259');b.cylinder(0,1.10,0,.93,.88,'#637982','#819398',12);b.cylinder(0,1.60,0,1.00,.12,'#495a63','#a1adab',12);
- for(let s of [-1,1]){b.box(s*.82,.40,0,.25,.45,1.34,'#7a8b8b','#42555d');}
- for(let j=0;j<6;j++)b.box(-.75+j*.30,.43,1.065,.08,.30,.09,j%2?'#d2a766':'#263a41','#4b4840');b.pop()}
-function machineShop(b){b.push(3.43,0,-2.94);b.box(0,.94,0,1.94,1.63,1.96,'#8a979b','#536269');b.box(0,1.95,-.22,1.65,.47,1.36,'#6e858c','#465b65');
- b.box(0,1.12,1.02,1.11,.75,.12,'#1f534c','#295c57');for(let i=0;i<5;i++)b.box(-.43+i*.22,.69,1.13,.11,.09,.06,i%2?'#baca71':'#64dd9a','#5b7862');
- for(let i=0;i<5;i++)b.box(.995,.70,-.67+i*.32,.08,.6,.12,'#617c83','#3a5660');b.pop()}
+function armory(b){b.push(-3.52,0,-3.42);
+ b.box(0,1.18,0,2.5,2.08,1.91,'#758785','#475b61');
+ armorWedge(b,0,2.34,-.22,2.25,1.92,.47,1.65,1.35,'#89938f','#56696b');
+ b.box(-.34,2.76,-.35,1.6,.83,1.2,'#788684','#4d6266');
+ for(let x of [-.65,.65]){b.cylinder(x,3.47,-.37,.23,1.27,'#4d6068','#9ba9a6',10);b.cylinder(x,4.12,-.37,.33,.15,'#63737b','#a4b2ab',10);}
+ for(let s of [-1,1]){b.box(s*1.12,1.17,.15,.33,1.64,1.38,'#667c7b','#3b5057');b.box(s*1.23,.43,.25,.20,.27,.8,'#9baca2','#536866');}
+ for(let j=0;j<4;j++)b.box(-.7+j*.46,1.06,.988,.30,.65,.12,j===1?'#edac55':'#aa6c3c','#6b4934');
+ for(let j=0;j<5;j++)b.box(-.97+j*.49,.36,1.023,.14,.15,.09,j%2?'#d4b476':'#34494c','#516267');
+ for(let j=0;j<4;j++)b.box(1.27,.58+j*.37,-.22,.09,.08,1.33,j%2?'#b59562':'#8b9c94','#566b70');
+ b.pop()}
+function supply(b){b.push(-3.48,0,-.87);
+ b.box(0,.36,0,2.19,.54,2.19,'#596d75','#3d545e');
+ for(let s of [-1,1]){b.box(s*.88,.36,.04,.38,.48,1.64,'#7d9495','#465f66');b.box(.01,.31,s*.88,1.58,.30,.36,'#70868b','#40565d');}
+ b.cylinder(0,.87,0,.87,.63,'#617781','#899b9d',12);
+ // Original StarCraft depot's recognizable low octagonal stepped roof.
+ b.cylinder(0,1.22,0,1.04,.25,'#687d87','#9aaba7',12);
+ b.cylinder(0,1.39,0,.84,.11,'#536871','#95a7a6',12);
+ b.cylinder(0,1.53,0,.45,.09,'#455d64','#9eaaa8',10);
+ for(let j=0;j<8;j++){let a=j*Math.PI/4;b.box(Math.cos(a)*.82,1.44,Math.sin(a)*.82,.21,.08,.22,'#a1b0ab','#51676c');}
+ for(let j=0;j<6;j++)b.box(-.75+j*.30,.44,1.09,.09,.25,.09,j%2?'#c4a36b':'#34464b','#52514d');
+ b.pop()}
+function machineShop(b){b.push(3.43,0,-2.94);
+ b.box(0,.88,0,1.98,1.55,2.01,'#83959a','#4d636c');
+ b.box(0,1.82,-.22,1.72,.43,1.50,'#657d87','#465c66');
+ armorWedge(b,0,2.13,-.25,1.78,1.50,.39,1.55,1.12,'#839698','#51656b');
+ b.box(0,1.15,1.04,1.16,.88,.14,'#23564d','#285c57');
+ b.box(0,1.14,1.12,.92,.54,.05,'#43af83','#2b705d');
+ for(let j=0;j<5;j++)b.box(-.44+j*.22,.68,1.155,.10,.09,.09,j%2?'#d7c17f':'#70e8a8','#526c60');
+ for(let s of [-1,1]){b.box(s*.91,1.11,.26,.24,1.51,1.23,'#798d8f','#4b6068');for(let j=0;j<4;j++)b.box(s*1.02,.54+j*.35,-.54,.10,.08,.26,'#95aaa5','#4d6971');}
+ // Attached joint and machine-shop coolant pipe entering the factory.
+ b.push(-1.07,.82,-.4);b.box(0,0,0,.44,.36,1.31,'#52676d','#334851');b.pop();
+ b.pop()}
 function bunker(b){b.push(3.91,0,2.18);b.box(0,.15,0,1.83,.16,1.66,'#566e70','#36454a');
  for(let x of [-.83,.83])for(let z of [-.72,.72]){b.box(x,.57,z,.14,1.05,.14,'#849b9a','#607982');b.box(x,1.1,z,.22,.14,.22,'#b4bdb2','#6e8583')}
  for(let z of [-.7,.7])b.box(0,.86,z,1.8,.12,.13,'#8da6a6','#607d7e');
@@ -152,43 +200,116 @@ function factoryShutter(b,phase){
  b.pop();
 }
 function boxSegment(b,a,c,w,top='#69867b',side='#354e4b'){b.beam(a[0],a[1],a[2],c[0],c[1],c[2],w,top)}
-function marine(b,x,z,t,lead,react,watch){let tx=x-(lead?react*.23:0),tz=z+(lead?react*.15:0),breath=Math.sin(t*.72+(lead?0:1.4))*.025;
- b.push(tx,.17,tz,lead?-.13:0);b.stack.push(M.mul(b.matrix,M.S(1.18,1.18,1.18)));
- for(let s of [-1,1]){b.box(s*.17,.16,s*.07+(lead&&s<0?react*.16:0),.24,.25,.31,'#415b57','#263f41');b.box(s*.18,.46,s*.03+(lead&&s<0?react*.12:0),.24,.50,.26,'#58786c','#344f49');}
- b.box(0,.90+breath+react*.11,0,.71,.69,.48,lead?'#609386':'#568075','#385850');
- b.box(0,.96+breath+react*.11,-.27,.63,.60,.25,'#3e625e','#29484a');
- for(let s of [-1,1])b.box(s*.43,1.01+breath+react*.10,0,.32,.36,.38,'#74998c','#405d5c');
- // Helmet pivot. Human gesture uses head and rifle, not whole-object spin.
- b.push(0,1.45+breath+react*.09,0,watch*(lead?-.42:-.06));
- b.box(0,0,0,.59,.50,.56,'#789c93','#47645d');b.box(0,-.06,.302,.48,.20,.075,'#253f46','#2b6060');
- b.box(.22,-.06,.36,.10,.08,.04,'#a4dbc1','#739e88');b.pop();
- b.push(0,react*.20,0);b.box(0,.82,.47,.95,.14,.17,'#293c44','#1b3139');b.box(.37,.82,.49,.44,.09,.14,'#99a29a','#616d6b');b.box(-.42,.80,.48,.21,.24,.17,'#596d6e','#45585a');b.pop();
- b.pop();b.pop()}
+function marine(b,x,z,t,lead,react,watch){
+ const tx=x-(lead?react*.23:0),tz=z+(lead?react*.15:0),breath=Math.sin(t*.72+(lead?0:1.4))*.027,bodyLift=react*.10;
+ b.push(tx,.16,tz,lead?-.13:0);b.stack.push(M.mul(b.matrix,M.S(1.15,1.15,1.15)));
+ // Chunky CMC suit boots, split kneecaps and armored thighs.
+ for(let side of [-1,1]){
+  const shift=side<0&&lead?react*.15:0;
+  b.box(side*.20,.18,.08+shift,.29,.30,.40,'#536e68','#304a4b');
+  b.box(side*.20,.42,.00+shift*.8,.27,.32,.29,'#6a8d7e','#365750');
+  b.box(side*.20,.46,.20+shift,.28,.18,.19,'#90aa96','#42635c');
+  b.box(side*.20,.69,-.01,.30,.26,.34,'#638878','#3f5a53');
+ }
+ // Wide armored chest and bright trim read well at the tiny isometric scale.
+ armorWedge(b,0,.98+breath+bodyLift,0,.82,.65,.67,.58,.48,'#75988c','#425f5a');
+ b.box(0,.93+breath+bodyLift,.32,.63,.43,.15,'#456d66','#31524f');
+ b.box(0,.84+breath+bodyLift,.41,.39,.13,.09,'#9cad9f','#486e65');
+ b.box(0,.67+breath,-.08,.48,.16,.34,'#3e5652','#2a4847');
+ b.box(0,1.08+breath+bodyLift,-.32,.62,.48,.22,'#496d65','#2a4b48');
+ // Oversized round pauldrons and jointed forearms.
+ for(let side of [-1,1]){
+  b.push(side*.48,1.14+breath+bodyLift,0,0,0,Math.PI/2);
+  b.cylinder(0,0,0,.30,.41,'#668d7d','#91b1a1',9);b.pop();
+  b.box(side*.59,.94+breath+bodyLift,.22,.23,.35,.26,'#47645c','#2c4e4b');
+  b.box(side*.57,.78+breath+bodyLift,.37,.19,.15,.25,'#91a597','#486760');
+ }
+ // Helmet yaw tracks the tank after the startled pose.
+ b.push(0,1.53+breath+bodyLift,0,watch*(lead?-.42:-.06));
+ b.cylinder(0,-.08,0,.34,.34,'#627e75','#88a599',9);
+ armorWedge(b,0,.14,0,.63,.50,.33,.64,.52,'#819e92','#4a6965');
+ b.box(0,-.02,.319,.50,.19,.08,'#172f39','#163c46');
+ b.box(0,.015,.369,.39,.075,.04,'#4ba5a5','#276676');
+ b.box(0,-.18,.30,.36,.10,.16,'#4e6965','#2b4747');
+ for(let side of [-1,1]){b.box(side*.33,-.075,0,.14,.17,.32,'#526f66','#355650');b.box(side*.27,.09,.22,.13,.07,.09,'#a6b8a4','#4d746b');}
+ b.pop();
+ // Long blocky Gauss rifle tilts up slightly during surprise.
+ b.push(0,react*.22,0);
+ b.box(0,.88,.54,.92,.16,.25,'#2a3e46','#203039');
+ b.box(.34,.88,.65,.49,.09,.17,'#a9aea3','#66777a');
+ b.box(.61,.89,.66,.18,.13,.16,'#5a7178','#364e53');
+ b.box(-.41,.81,.50,.20,.26,.19,'#667b78','#43565a');
+ b.box(-.06,.73,.57,.19,.26,.15,'#435a57','#2d4649');
+ b.pop();b.pop();b.pop();
+}
 function tank(b,x,z,t,dist,turn){b.push(x,.13,z);
- // Tracked lower chassis, visible wheels, fenders and animated tread ridges.
- for(let s of [-1,1]){b.box(s*.64,.37,0,.68,.58,1.88,'#43515b','#243940');
- for(let j=0;j<5;j++){b.cylinder(s*.71,.21,-.7+j*.35,.19,.18,'#37474d','#72848a',7)}
- for(let j=-4;j<=4;j++)b.box(s*.64,.18,-.78+j*.19+((dist*.19)% .19),.71,.055,.075,'#82918a','#55686c')}
- b.box(0,.66,0,1.61,.56,1.98,'#84958e','#52656b');b.box(0,.74,.79,1.22,.27,.47,'#71827f','#4f6264');
- for(let s of [-1,1])b.box(s*.61,.62,.89,.21,.15,.12,'#cdaa70','#886d44');
- b.cylinder(0,1.025,-.13,.60,.22,'#54666b','#7e918e',10);
- b.push(0,1.14,-.12,turn);b.box(0,.15,0,1.08,.50,.95,'#87938c','#51616b');b.box(0,.22,-.27,.74,.22,.48,'#9da99d','#687980');
- b.cylinder(-.21,.45,-.20,.22,.08,'#52666c','#a5b3a8',10);
- // StarCraft 1 two-barrel siege tank, both mounted to the turning turret.
- for(let s of [-1,1]){b.box(s*.28,.20,.91,.17,.18,1.22,'#9aa9aa','#526771');b.box(s*.28,.20,1.56,.27,.22,.15,'#55656b','#b2b1a1');}
- b.pop();b.pop()}
-function scv(b,t){const spots=[[4.53,2.92],[4.20,2.76],[4.34,3.21]],phase=t%18,k=Math.floor(phase/6),p=phase%6,move=S(4.1,5.5,p),x=lerp(spots[k][0],spots[(k+1)%3][0],move),z=lerp(spots[k][1],spots[(k+1)%3][1],move),bob=Math.sin(t*2.6)*.035;
- b.push(x,.17+bob,z,-.55+(k-1)*.23);
- b.box(0,.51,0,.72,.62,.68,'#a89a69','#625c48');b.box(0,.92,-.03,.53,.31,.44,'#70969a','#466b76');b.box(0,1.02,.23,.39,.17,.10,'#6ec2c2','#2d626d');
- for(let s of [-1,1]){b.box(s*.53,.55,0,.32,.50,.48,'#b09f70','#77694c');b.box(s*.39,.12,.26,.24,.19,.25,'#4d626a','#384e58');}
- b.push(.49,.69,.12,Math.sin(t*5)*.16);b.box(0,0,.39,.16,.21,.74,'#c5ad74','#8a784f');b.box(0,-.08,.76,.31,.18,.21,'#b9bd9f','#736c55');b.pop();b.pop();}
+ // Original Arclite outline: broad low hull, clearly separated tracks, two barrels.
+ for(let side of [-1,1]){
+  b.box(side*.73,.42,0,.65,.57,2.02,'#465b62','#263b44');
+  b.box(side*.73,.74,-.01,.72,.17,1.95,'#687a7e','#425962');
+  b.box(side*.73,.18,.0,.70,.12,1.92,'#384a50','#253b42');
+  // Road wheel hubs mounted perpendicular to the sides.
+  for(let j=0;j<5;j++)axialWheel(b,side*1.079,.34,-.77+j*.38,.16,'#617578');
+  for(let j=0;j<10;j++){
+   const step=((dist*.17)% .188);b.box(side*.74,.77,-.85+j*.188+step,.71,.075,.09,'#95a39a','#54666b');
+   b.box(side*.74,.13,-.85+j*.188+step,.71,.064,.077,'#607476','#364e53');
+  }
+  b.box(side*1.02,.63,.40,.09,.10,.68,'#84958e','#475c61');
+ }
+ armorWedge(b,0,.64,0,1.74,1.43,.58,2.15,1.77,'#91a39b','#546b72');
+ b.box(0,.43,.88,1.39,.15,.34,'#55686b','#344951');
+ armorWedge(b,0,.79,-.70,1.41,1.02,.30,1.06,.85,'#798e8d','#4d646d');
+ b.box(0,.81,1.04,1.07,.15,.21,'#a7b3a6','#687875');
+ for(let side of [-1,1]){
+  b.box(side*.55,.65,1.07,.30,.18,.12,'#c7a36c','#856744');
+  b.box(side*.56,.82,-.77,.36,.08,.52,'#72898a','#435b61');
+  for(let j=0;j<3;j++)b.box(side*.55,.49,-.26+j*.3,.22,.05,.12,'#a3b2a4','#4c6965');
+ }
+ // Separate circular turret ring controls only upper hull and gun barrels.
+ b.cylinder(0,1.00,-.15,.68,.18,'#52666e','#93a59f',12);
+ b.push(0,1.14,-.14,turn);
+ armorWedge(b,0,.16,0,1.19,.92,.52,1.09,.84,'#92a399','#536972');
+ b.box(0,.40,-.27,.75,.12,.53,'#b0b8aa','#6a7d7b');
+ b.box(0,.43,.17,.66,.15,.35,'#718783','#3f5860');
+ b.cylinder(-.28,.48,-.22,.19,.075,'#4d6570','#afb9ae',10);
+ b.box(.23,.49,-.16,.19,.12,.30,'#435b61','#304a50');
+ // Barrel sleeves and steel muzzle brakes follow the turret yaw.
+ for(let side of [-1,1]){
+  b.box(side*.28,.20,.78,.27,.25,1.32,'#9aa9a2','#526c75');
+  b.box(side*.28,.20,1.49,.20,.19,.22,'#637d81','#3a555b');
+  b.box(side*.28,.20,1.61,.31,.28,.15,'#bdc3b2','#65787b');
+  b.box(side*.28,.20,1.697,.15,.09,.025,'#1c3640','#283f46');
+ }
+ b.pop();b.pop();}
+function scv(b,t){const spots=[[4.53,2.92],[4.20,2.76],[4.34,3.21]],phase=t%18,k=Math.floor(phase/6),p=phase%6,move=S(4.1,5.5,p),x=lerp(spots[k][0],spots[(k+1)%3][0],move),z=lerp(spots[k][1],spots[(k+1)%3][1],move),bob=Math.sin(t*2.6)*.025;
+ b.push(x,.18+bob,z,-.55+(k-1)*.23);
+ // Squat industrial service vehicle, no humanoid legs.
+ b.box(0,.39,0,.90,.44,.80,'#b6a36e','#625a43');
+ armorWedge(b,0,.65,-.05,.83,.60,.40,.65,.48,'#c7b27e','#897653');
+ b.box(0,.90,-.05,.57,.25,.45,'#779ca2','#456a75');
+ b.box(0,.93,.20,.42,.12,.08,'#75d4cf','#337c82');
+ for(let side of [-1,1]){
+  b.box(side*.46,.40,-.09,.26,.39,.56,'#9c9067','#655b47');
+  b.box(side*.43,.15,.28,.28,.19,.25,'#516b73','#324e56');
+  b.box(side*.43,.15,-.39,.28,.19,.25,'#516b73','#324e56');
+  b.cylinder(side*.58,.59,.06,.19,.21,'#6c7372','#9eafa5',8);
+  // Separately articulated work arms with welding claws.
+  b.push(side*.55,.62,.08,side*.11+Math.sin(t*3.2+side)*.16);
+  b.box(side*.06,-.08,.26,.18,.22,.56,'#c7ae75','#87734e');
+  b.box(side*.08,-.16,.59,.16,.15,.40,'#9caeab','#5f7979');
+  b.box(side*.02,-.21,.80,.11,.13,.26,'#b8bbb0','#7b806f');
+  for(let claw of [-1,1])b.box(side*.04+claw*.11,-.22,.95,.08,.16,.17,'#d2c4a0','#776f60');
+  b.pop();
+ }
+ b.box(0,.64,-.44,.38,.18,.13,'#7d9d9b','#456970');
+ b.pop();}
 // Render pipeline: static batches remain on the GPU; only articulated actors rebuild.
 const vert=`#version 300 es
 precision highp float;layout(location=0) in vec3 aPos;layout(location=1) in vec3 aNormal;layout(location=2) in vec3 aColor;
 uniform mat4 uVP;out vec3 vPos;out vec3 vN;out vec3 vC;void main(){vPos=aPos;vN=normalize(aNormal);vC=aColor;gl_Position=uVP*vec4(aPos,1.0);}`;
 const frag=`#version 300 es
 precision highp float;in vec3 vPos;in vec3 vN;in vec3 vC;out vec4 outColor;uniform vec3 uCamera;
-void main(){vec3 n=normalize(vN);vec3 moon=normalize(vec3(-.6,.9,-.45));float diffuse=max(dot(n,moon),0.0);float ambient=.70+.19*max(n.y,0.0);float fill=max(dot(n,vec3(.4,.5,.8)),0.0)*.17;vec3 lighting=vec3(.70,.81,.90)*(ambient+diffuse*.48)+vec3(.08,.13,.16)*fill;
+void main(){vec3 n=normalize(vN);vec3 moon=normalize(vec3(-.6,.9,-.45));float diffuse=max(dot(n,moon),0.0);float ambient=.75+.19*max(n.y,0.0);float fill=max(dot(n,vec3(.4,.5,.8)),0.0)*.17;vec3 lighting=vec3(.74,.83,.91)*(ambient+diffuse*.49)+vec3(.08,.13,.16)*fill;
 float warm=1.9/(1.0+pow(length((vPos-vec3(.55,1.2,-1.36))*vec3(.85,1.3,.85)),2.0)*.34);warm+=1.25/(1.0+pow(length((vPos-vec3(-3.5,1.9,-2.7))*vec3(.9,1.1,.8)),2.0)*.5);
 lighting+=vec3(1.0,.53,.22)*warm*.55;vec3 c=vC*lighting;float dist=length(vPos-uCamera);float haze=clamp((dist-19.0)/30.0,0.0,.34);c=mix(c,vec3(.035,.09,.11),haze);c=pow(max(c,vec3(0.0)),vec3(.88));outColor=vec4(c,1.0);}`;
 function shader(type,text){let s=gl.createShader(type);gl.shaderSource(s,text);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
