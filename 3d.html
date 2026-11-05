@@ -412,7 +412,7 @@ assetInput.addEventListener('change',async e=>{
  if(!Object.keys(nextSprites).length){ for(const file of files){ if(!file.type.startsWith('image/')) continue; const alias=normalizeName(file.name); nextSprites[alias]=await loadImageURL(URL.createObjectURL(file)); }}
  if(Object.keys(nextSprites).length){assetState.enabled=true; assetState.sprites=nextSprites; assetState.meta=nextMeta; assetState.source='local';setAssetStatus(`LOCAL SPRITE MODE · ON (${Object.keys(nextSprites).length})`,true);syncSpriteToggle();} else setAssetStatus('LOCAL SPRITE MODE · PACK NOT FOUND',false);
 });
-if(q.get('assets')!=='0') tryAutoLocalPack();
+if(q.get('assets')==='1') tryAutoLocalPack();
 
 // Kenney's Sci-Fi RTS artwork is CC0. These images load from the original
 // publicly available repository at runtime and are never bundled with Blizzard assets.
@@ -448,7 +448,7 @@ spriteToggle.addEventListener('click',()=>{
   else setAssetStatus(assetState.enabled?(assetState.source==='local'?'로컬 그래픽 모드':'CC0 그래픽 모드'):'순수 3D 모드',assetState.enabled);
   syncSpriteToggle();
 });
-if(q.get('skin')!=='0')autoLoadCC0();
+if(q.get('skin')==='1')autoLoadCC0();
 
 const btn=$('pause');function syncBtn(){btn.textContent=playing?'Ⅱ':'▶';btn.setAttribute('aria-label',playing?'일시정지':'재생');btn.title=playing?'일시정지 (Space)':'재생 (Space)'}syncBtn();
 function toggle(){playing=!playing;syncBtn()}btn.addEventListener('click',toggle);addEventListener('keydown',e=>{if(e.code==='Space'&&e.target.tagName!=='BUTTON'){e.preventDefault();toggle()}});
