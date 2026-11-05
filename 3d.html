@@ -251,7 +251,7 @@ function marine(b,x,z,t,lead,react,watch){
 // Vehicle points towards +Z; turret is the sole part receiving the yaw rotation.
 function tank(b,x,z,t,dist,turn){
   b.push(x,.13,z);
-  const iron='#32434c',tread='#263841',treadEdge='#52656b',steel='#6e8184',light='#a4ada4',trim='#879b99';
+  const iron='#32434c',treadEdge='#52656b';
   // Four visibly separate track modules (front and rear, left and right), not a single metal box.
   // Total footprint remains within the former tank envelope for the Factory-door gag.
   for(const side of [-1,1]){
