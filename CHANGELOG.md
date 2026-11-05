@@ -1,3 +1,11 @@
+## v0.8 — Original StarCraft sprite importer (2026-11-06)
+- New `original.html` to import personally extracted original BW sprites in the browser.
+- Auto-match Marine, SCV, Siege Tank and building PNG/APNG names; hide replaced low-poly meshes.
+- Offline GRP + palette converter `tools/prepare_original_assets.py` and standard-library tests.
+- Preserve v0.7 3D version, 35-second comic loop and no-audio rule.
+- Game graphics not distributed through public GitHub or Pages; original files must be supplied locally.
+- Tested PNG name import/3D toggle, synthetic GRP decoding and source JavaScript syntax. Full WebGL visual test was unavailable.
+
 # Changelog
 
 ## v0.7 — CC0 sprite hybrid (2026-11-06)
