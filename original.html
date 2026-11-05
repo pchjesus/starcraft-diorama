@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071318">
-<title>Factory After Hours · Original StarCraft sprite importer v0.8</title>
+<title>Factory After Hours · Original StarCraft sprite importer v0.9</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071318;color:#ecf2eb}
@@ -28,7 +28,7 @@
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
 <div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><button id="assetBtn" type="button" title="개인 게임에서 추출한 원본 스프라이트 폴더 불러오기">원본 스프라이트 선택</button><button id="spriteToggle" type="button" title="스프라이트 레이어 전환">화면: 3D</button><input id="assetInput" type="file" accept="image/*,.json" multiple webkitdirectory directory><div><div class="eyebrow">SCENE 01 / ORIGINAL SPRITE IMPORT</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div><span id="assetMode">원본 스프라이트 미선택</span></div></div>
-<div id="badge">V0.8 · ORIGINAL SPRITE IMPORT · NO AUDIO</div><div id="progress"></div>
+<div id="badge">V0.9 · ANIMATION READY · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
@@ -332,7 +332,7 @@ function resize(){width=innerWidth;height=innerHeight;ratio=Math.min(devicePixel
  const aspect=width/height,halfX=aspect>1.2?11.55:9.7,halfY=halfX/aspect;const proj=M.ortho(-halfX,halfX,-halfY,halfY,-90,90);vp=M.mul(proj,view)}
 addEventListener('resize',resize);resize();
 let playing=true,clock=0,last=0;let q=new URLSearchParams(location.search),test=q.get('phase');if(test!==null && Number.isFinite(Number(test))){clock=Math.max(0,Number(test));playing=false}
-const assetState={enabled:false,source:'none',sprites:{},meta:{},status:'원본 스프라이트 미선택'};
+const assetState={enabled:false,source:'none',sprites:{},meta:{},status:'원본 스프라이트 미선택',errors:[]};
 const assetModeLabel=$('assetMode'),assetBtn=$('assetBtn'),assetInput=$('assetInput'),spriteToggle=$('spriteToggle');
 const spriteDefaults={
  factory:{width:280,height:210,anchorX:.5,anchorY:.92},machine_shop:{width:185,height:155,anchorX:.5,anchorY:.90},armory:{width:190,height:175,anchorX:.5,anchorY:.91},supply_depot:{width:175,height:130,anchorX:.5,anchorY:.88},bunker_frame:{width:165,height:115,anchorX:.5,anchorY:.87},
@@ -346,50 +346,92 @@ function setAssetStatus(msg,on=false){assetState.status=msg;assetModeLabel.textC
 function normalizeName(name){return (name||'').toLowerCase().replace(/\.[^.]+$/,'').replace(/[\s\-]+/g,'_')}
 function canonicalKey(name){const stem=normalizeName(name).replace(/_\d{3,5}$/,'');for(const [key,names] of Object.entries(spriteAliasSets)){if(names.includes(stem))return key;}return null;}
 function loadImageURL(url){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;})}
-function pickSprite(key){if(!assetState.enabled)return null;for(const alias of (spriteAliasSets[key]||[key])){if(assetState.sprites[alias])return {img:assetState.sprites[alias],meta:{...spriteDefaults[key],...(assetState.meta[alias]||{})}};}return null}
+function cleanMeta(value){const obj={};if(typeof value!=='object'||!value)return obj;
+ for(const key of ['width','height','anchorX','anchorY','dx','dy','fps','startFrame','directionStep'])if(Number.isFinite(value[key]))obj[key]=value[key];
+ // A frame list is not equivalent to StarCraft's full iscript animation.
+ if(value.states&&typeof value.states==='object'){
+  obj.states={};for(const [name,sequence] of Object.entries(value.states)){
+   if(Array.isArray(sequence)&&sequence.length<=512){const seq=sequence.filter(n=>Number.isInteger(n)&&n>=0&&n<=4096);if(seq.length)obj.states[name]=seq;}
+  }
+ }
+ return obj;
+}
+// Imported sprite entry: {frames:[Image], meta:{fps,states,...}} or legacy Image.
+function spriteFrame(entry,meta,state='idle',t=0){
+ if(!entry)return null;const frames=Array.isArray(entry.frames)?entry.frames:[entry];if(!frames.length)return null;
+ const seq=(meta.states&&(meta.states[state]||meta.states.idle))||null;
+ let idx=0;
+ if(seq&&seq.length){const tick=Math.floor(Math.max(0,t)*(meta.fps||6));idx=seq[tick%seq.length];}
+ else if(meta.autoAnimate===true){idx=Math.floor(Math.max(0,t)*(meta.fps||6))%frames.length;}
+ else idx=Number.isInteger(meta.startFrame)?meta.startFrame:frames.length>=17?8:0;
+ return frames[Math.min(frames.length-1,Math.max(0,idx))]||frames[0];
+}
+function pickSprite(key,state='idle',t=0){if(!assetState.enabled)return null;for(const alias of (spriteAliasSets[key]||[key])){
+ const value=assetState.sprites[alias];if(value){const meta={...spriteDefaults[key],...(assetState.meta[alias]||{})};return {img:spriteFrame(value,meta,state,t),meta};}
+ }return null;}
 function hasSprite(key){return !!pickSprite(key)}
 function syncSpriteToggle(){spriteToggle.textContent=assetState.enabled?'화면: 스타1 원본':'화면: 3D';spriteToggle.setAttribute('aria-pressed',String(assetState.enabled));}
-function setSpritePack(sprites,meta){
- const keys=Object.keys(sprites);if(!keys.length){setAssetStatus('인식할 수 있는 원본 이미지가 없어.');return false;}
- assetState.enabled=true;assetState.source='original-local';assetState.sprites=sprites;assetState.meta=meta;
- setAssetStatus(`원본 스프라이트 ${keys.length}종 적용 · 로컬에서만 읽음`,true);syncSpriteToggle();return true;
+function setSpritePack(sprites,meta,errors=[]){
+ const keys=Object.keys(sprites);if(!keys.length){setAssetStatus('읽을 수 있는 원본 이미지가 없어.');return false;}
+ assetState.enabled=true;assetState.source='original-local';assetState.sprites=sprites;assetState.meta=meta;assetState.errors=errors;
+ const total=Object.values(sprites).reduce((n,v)=>n+(Array.isArray(v.frames)?v.frames.length:1),0);
+ setAssetStatus(`원본 그래픽 ${keys.length}종 · ${total}프레임${errors.length?' · 일부 오류 '+errors.length+'건':''}`,true);
+ syncSpriteToggle();return true;
 }
-function cleanMeta(value){const obj={};if(typeof value!=='object'||!value)return obj;for(const key of ['width','height','anchorX','anchorY','dx','dy']){if(Number.isFinite(value[key]))obj[key]=value[key]};return obj;}
+function safePath(path){return typeof path==='string' && /^[\w./-]+\.(png|apng|webp)$/i.test(path) && !path.startsWith('/') && !path.split('/').includes('..')}
+function assetSpec(raw){return typeof raw==='string'?{src:raw}:raw&&typeof raw==='object'?raw:null}
+async function loadSpec(spec,read){
+ const paths=Array.isArray(spec.frames)?spec.frames:(spec.src?[spec.src]:[]);
+ if(paths.length>512)throw Error('too many frames');
+ const imgs=[];for(const path of paths){if(!safePath(path))throw Error('invalid image path: '+path);imgs.push(await read(path))}
+ if(!imgs.length)throw Error('empty sprite');return {frames:imgs};
+}
+function manifestEntries(manifest){return Object.entries(manifest.sprites||manifest.images||{}).filter(([key])=>!!canonicalKey(key));}
 async function applyManifest(manifest,base=''){
- const sprites={},meta={};for(const [raw,val] of Object.entries(manifest.sprites||manifest.images||{})){
-  const alias=canonicalKey(raw)||normalizeName(raw);let src=typeof val==='string'?val:val?.src||val?.path||'';if(!src||!['png','apng','webp'].includes(src.split('.').pop().toLowerCase()))continue;
-  try{sprites[alias]=await loadImageURL(base+src);meta[alias]=cleanMeta(val);}catch(err){console.warn('Could not load asset',alias,err)}
+ const sprites={},meta={},errors=[];
+ for(const [key,value] of manifestEntries(manifest)){
+  const alias=canonicalKey(key),spec=assetSpec(value);if(!spec)continue;
+  try{sprites[alias]=await loadSpec(spec,path=>loadImageURL(base+path));meta[alias]=cleanMeta(spec)}
+  catch(err){errors.push(alias);console.warn('Could not load',alias,err)}
  }
- return setSpritePack(sprites,meta);
+ return setSpritePack(sprites,meta,errors);
 }
 async function tryAutoLocalPack(){
  if(location.protocol==='file:')return;
- try{const response=await fetch('./local_assets/manifest.json',{cache:'no-store'});if(!response.ok)return;await applyManifest(await response.json(),'./local_assets/');}catch(err){}
+ try{const response=await fetch('./local_assets/manifest.json',{cache:'no-store'});if(!response.ok)return;await applyManifest(await response.json(),'./local_assets/');}
+ catch(err){console.debug('No local original sprite pack',err)}
 }
-function fileKey(file){
- const name=file.name,parts=(file.webkitRelativePath||name).split(/[\/]/);
- return canonicalKey(name)||parts.slice(0,-1).reverse().map(canonicalKey).find(Boolean)||null;
-}
-function filePriority(file){const n=normalizeName(file.name);return file.name.toLowerCase().endsWith('.apng')?0:/_0000$/.test(n)?1:!/_\d{3,5}$/.test(n)?2:3;}
+function fileKey(file){const parts=(file.webkitRelativePath||file.name).split(/[\\/]/);
+ return canonicalKey(file.name)||parts.slice(0,-1).reverse().map(canonicalKey).find(Boolean)||null;}
+function frameNumber(file){const result=normalizeName(file.name).match(/_(\d{3,5})$/);return result?Number(result[1]):null}
 assetBtn.addEventListener('click',()=>assetInput.click());
 assetInput.addEventListener('change',async e=>{
  const files=[...(e.target.files||[])];if(!files.length)return;
  assetBtn.disabled=true;setAssetStatus('원본 파일 읽는 중…');
- const filesByName=new Map(files.map(f=>[f.webkitRelativePath||f.name,f]));
- const json=files.find(f=>f.name==='manifest.json');const sprites={},meta={};
+ const all=new Map(files.map(f=>[(f.webkitRelativePath||f.name).replace(/\\/g,'/'),f]));
+ const json=files.find(f=>f.name==='manifest.json');const sprites={},meta={},errors=[];
  if(json){try{
-  const manifest=JSON.parse(await json.text());for(const [raw,val] of Object.entries(manifest.sprites||{})){
-   const alias=canonicalKey(raw)||normalizeName(raw),src=typeof val==='string'?val:val?.src||'';
-   const match=files.find(f=>f.webkitRelativePath?.endsWith('/'+src)||f.name===src);if(!match)continue;
-   const url=URL.createObjectURL(match);try{sprites[alias]=await loadImageURL(url);meta[alias]=cleanMeta(val)}finally{URL.revokeObjectURL(url)}
+  const manifest=JSON.parse(await json.text());for(const [raw,value] of manifestEntries(manifest)){
+   const alias=canonicalKey(raw),spec=assetSpec(value);if(!spec)continue;
+   try{sprites[alias]=await loadSpec(spec,async path=>{
+    const match=all.get(path)||files.find(f=>(f.webkitRelativePath||f.name).replace(/\\/g,'/').endsWith('/'+path)||f.name===path);
+    if(!match)throw Error('missing '+path);const url=URL.createObjectURL(match);
+    try{return await loadImageURL(url)}finally{URL.revokeObjectURL(url)}
+   });meta[alias]=cleanMeta(spec)}catch(err){errors.push(alias);console.warn('Invalid asset',alias,err)}
   }
- }catch(err){console.warn('Invalid manifest',err)}}
+ }catch(err){errors.push('manifest');console.warn('Invalid manifest',err)}}
  if(!Object.keys(sprites).length){
-  const choices=new Map();for(const file of files){if(!/\.(png|apng|webp)$/i.test(file.name))continue;const key=fileKey(file);if(!key)continue;
-   const score=filePriority(file);const prev=choices.get(key);if(!prev||score<prev.score)choices.set(key,{file,score});}
-  for(const [key,{file}] of choices){const url=URL.createObjectURL(file);try{sprites[key]=await loadImageURL(url)}catch(err){console.warn('Unable to read',file.name)}finally{URL.revokeObjectURL(url)}}
+  const grouped=new Map();for(const f of files){if(!/\.(png|apng|webp)$/i.test(f.name)||f.size>4*1024*1024)continue;
+   const key=fileKey(f);if(!key)continue;const bucket=grouped.get(key)||[];bucket.push(f);grouped.set(key,bucket);
+  }
+  for(const [key,allFiles] of grouped){
+   const sorted=allFiles.sort((a,b)=>{const na=frameNumber(a),nb=frameNumber(b);if(na===null&&nb!==null)return -1;if(nb===null&&na!==null)return 1;
+    return na!==null&&nb!==null?na-nb:a.name.localeCompare(b.name)}).slice(0,128);
+   const imgs=[];for(const f of sorted){const url=URL.createObjectURL(f);try{imgs.push(await loadImageURL(url))}catch(err){errors.push(f.name)}finally{URL.revokeObjectURL(url)}}
+   if(imgs.length){sprites[key]={frames:imgs};meta[key]={fps:6,startFrame:imgs.length>=17?8:0};}
+  }
  }
- setSpritePack(sprites,meta);assetBtn.disabled=false;assetInput.value='';
+ setSpritePack(sprites,meta,errors);assetBtn.disabled=false;assetInput.value='';
 });
 spriteToggle.addEventListener('click',()=>{
  if(!Object.keys(assetState.sprites).length){assetInput.click();return;}
@@ -409,7 +451,7 @@ function particles(t,flash){ctx.clearRect(0,0,overlay.width,overlay.height);ctx.
  if(flash>.03){let p=project3(4.06,.53,2.35),g=ctx.createRadialGradient(...p,0,...p,26);g.addColorStop(0,`rgba(255,244,185,${flash*.88})`);g.addColorStop(1,'rgba(230,152,70,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,26,0,Math.PI*2);ctx.fill();}
 }
 function drawSpriteFrame(key,x,y,z,opts={}){
- const chosen=pickSprite(key);if(!chosen)return;
+ const chosen=pickSprite(key,opts.state||'idle',opts.time||0);if(!chosen)return;
  const p=project3(x,y,z),m=chosen.meta,scale=Math.min(1.25,Math.max(.38,(width/23.1)/51.9));
  const w=(m.width||120)*scale,h=(m.height||90)*scale,ax=m.anchorX??.5,ay=m.anchorY??.84;
  ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(p[0]+(m.dx||0)*scale,p[1]+(m.dy||0)*scale);
@@ -419,13 +461,13 @@ function drawSpriteFrame(key,x,y,z,opts={}){
 }
 function drawSpritePack(phase,out,react,watch,angle,t){if(!assetState.enabled)return;
  const entries=[
- ['armory',-3.52,.16,-3.42],['supply_depot',-3.48,.16,-.87],['factory',.55,.16,-2.95],['machine_shop',3.43,.16,-2.94],['bunker_frame',3.91,.16,2.18],
- [react>.05&&hasSprite('marine_react')?'marine_react':'marine',-1.52-react*.12,.16,2.18,{bob:-react*7,rotate:-react*.12}],
- ['marine',-3.15,.16,1.45],['scv',lerp([[4.53,2.92],[4.20,2.76],[4.34,3.21]][Math.floor(t%18/6)][0],[[4.53,2.92],[4.20,2.76],[4.34,3.21]][(Math.floor(t%18/6)+1)%3][0],S(4.1,5.5,t%6)),.16,lerp([[4.53,2.92],[4.20,2.76],[4.34,3.21]][Math.floor(t%18/6)][1],[[4.53,2.92],[4.20,2.76],[4.34,3.21]][(Math.floor(t%18/6)+1)%3][1],S(4.1,5.5,t%6))]
+ ['armory',-3.52,.16,-3.42,{time:t}],['supply_depot',-3.48,.16,-.87,{time:t}],['factory',.55,.16,-2.95,{time:t}],['machine_shop',3.43,.16,-2.94,{time:t}],['bunker_frame',3.91,.16,2.18,{time:t}],
+ [react>.05&&hasSprite('marine_react')?'marine_react':'marine',-1.52-react*.12,.16,2.18,{bob:-react*7,rotate:-react*.12,time:t,state:react>.05?'react':watch>.5?'watch':'idle'}],
+ ['marine',-3.15,.16,1.45,{time:t,state:'idle'}],['scv',lerp([[4.53,2.92],[4.20,2.76],[4.34,3.21]][Math.floor(t%18/6)][0],[[4.53,2.92],[4.20,2.76],[4.34,3.21]][(Math.floor(t%18/6)+1)%3][0],S(4.1,5.5,t%6)),.16,lerp([[4.53,2.92],[4.20,2.76],[4.34,3.21]][Math.floor(t%18/6)][1],[[4.53,2.92],[4.20,2.76],[4.34,3.21]][(Math.floor(t%18/6)+1)%3][1],S(4.1,5.5,t%6)),{time:t,state:'work'}]
  ];
  if(phase>=7.7&&phase<29.5&&hasSprite('siege_tank')){
-  const z=-1.30+out*2.38;entries.push(['siege_tank',.55,.16,z,{rotate:hasSprite('siege_tank_look')?0:angle*.12}]);
-  if(hasSprite('siege_tank_look'))entries.push(['siege_tank_look',.55,.56,z,{rotate:angle*.50}]);
+  const z=-1.30+out*2.38;entries.push(['siege_tank',.55,.16,z,{rotate:0,time:t,state:phase<14.8||phase>20.8?'move':Math.abs(angle)>.1?'look':'idle'}]);
+  if(hasSprite('siege_tank_look'))entries.push(['siege_tank_look',.55,.56,z,{rotate:angle*.50,time:t,state:'look'}]);
  }
  entries.sort((a,b)=>{
   const da=Math.hypot(eye[0]-a[1],eye[1]-a[2],eye[2]-a[3]);
