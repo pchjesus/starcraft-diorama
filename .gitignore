@@ -1,0 +1,14 @@
+# Original Blizzard assets stay local. Do not push or publish these.
+local_assets/
+original_sources/
+original_sprites/
+*.mpq
+*.grp
+*.wpe
+*.pal
+*.pcx
+*.casc
+Data/
+**/.DS_Store
+__pycache__/
+*.pyc
