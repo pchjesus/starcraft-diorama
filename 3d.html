@@ -17,13 +17,18 @@
 #badge{position:fixed;right:24px;bottom:26px;color:#9dacab;font-size:10px;letter-spacing:.13em;opacity:.85;z-index:3}
 #fallback{display:none;position:fixed;inset:0;background:#0c1619;color:#eee;z-index:10;align-items:center;justify-content:center;text-align:center;padding:25px;flex-direction:column;gap:18px}
 #fallback a{color:#b4dfcd}#progress{position:fixed;left:0;bottom:0;height:2px;background:#cba36f;width:0;opacity:.55;pointer-events:none;z-index:3}
-@media(max-width:640px){#hud{left:12px;bottom:15px;gap:8px}#pause{width:36px;height:36px}.title{font-size:13px}.subtitle{display:none}#badge{right:12px;bottom:16px;font-size:8px}}
+
+#spriteToggle,#assetBtn{height:34px;padding:0 12px;border-radius:999px;border:1px solid #9faeb755;background:#0c1d24c9;color:#eaf1df;font-size:11px;letter-spacing:.05em;cursor:pointer}
+#spriteToggle:hover,#spriteToggle:focus-visible,#assetBtn:hover,#assetBtn:focus-visible{background:#25454d;outline-color:#a6dbce}
+#assetMode{display:block;font-size:10px;color:#d8c28f;margin-top:3px}
+#assetInput{display:none}
+@media(max-width:640px){#hud{left:12px;bottom:15px;gap:8px;flex-wrap:wrap;max-width:92vw}#pause{width:36px;height:36px}#spriteToggle,#assetBtn{height:30px;padding:0 10px;font-size:10px}.title{font-size:13px}.subtitle{display:none}#badge{right:12px;bottom:16px;font-size:8px}}
 </style>
 </head>
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
-<div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><div><div class="eyebrow">SCENE 01 / BROOD WAR MODEL PASS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div></div></div>
-<div id="badge">V0.5 · BROOD WAR STUDY · NO AUDIO</div><div id="progress"></div>
+<div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><button id="assetBtn" type="button" title="로컬 스타1 그래픽팩 불러오기">로컬 그래픽팩</button><button id="spriteToggle" type="button" title="스프라이트 레이어 전환">그래픽: 3D</button><input id="assetInput" type="file" accept="image/*,.json" multiple webkitdirectory directory><div><div class="eyebrow">SCENE 01 / BROOD WAR MODEL PASS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div><span id="assetMode">LOCAL SPRITE MODE · OFF</span></div></div>
+<div id="badge">V0.7 · CC0 SPRITE EXPERIMENT · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
@@ -327,6 +332,76 @@ function resize(){width=innerWidth;height=innerHeight;ratio=Math.min(devicePixel
  const aspect=width/height,halfX=aspect>1.2?11.55:9.7,halfY=halfX/aspect;const proj=M.ortho(-halfX,halfX,-halfY,halfY,-90,90);vp=M.mul(proj,view)}
 addEventListener('resize',resize);resize();
 let playing=true,clock=0,last=0;let q=new URLSearchParams(location.search),test=q.get('phase');if(test!==null && Number.isFinite(Number(test))){clock=Math.max(0,Number(test));playing=false}
+const assetState={enabled:false,source:'none',sprites:{},meta:{},status:'LOCAL SPRITE MODE · OFF'};
+const assetModeLabel=$('assetMode'),assetBtn=$('assetBtn'),assetInput=$('assetInput'),spriteToggle=$('spriteToggle');
+const spriteDefaults={
+ factory:{width:280,height:210,anchorX:.5,anchorY:.92},machine_shop:{width:185,height:155,anchorX:.5,anchorY:.90},armory:{width:190,height:175,anchorX:.5,anchorY:.91},supply_depot:{width:175,height:130,anchorX:.5,anchorY:.88},bunker_frame:{width:165,height:115,anchorX:.5,anchorY:.87},
+ siege_tank:{width:198,height:118,anchorX:.5,anchorY:.80},siege_tank_look:{width:198,height:118,anchorX:.5,anchorY:.80},marine:{width:74,height:100,anchorX:.5,anchorY:.88},marine_react:{width:78,height:104,anchorX:.5,anchorY:.88},scv:{width:120,height:92,anchorX:.5,anchorY:.84}
+};
+const spriteAliasSets={factory:['factory'],machine_shop:['machine_shop','machine-shop','machineshop'],armory:['armory'],supply_depot:['supply_depot','supply-depot','supply','depot'],bunker_frame:['bunker_frame','bunker-frame','bunker'],siege_tank:['siege_tank','tank','siegetank'],siege_tank_look:['siege_tank_look','tank_look','siegetank_look'],marine:['marine','marine_idle'],marine_react:['marine_react','marine-alert','marine_surprised'],scv:['scv']};
+function setAssetStatus(msg,on=false){assetState.status=msg;assetModeLabel.textContent=msg;assetModeLabel.style.color=on?'#9ee2b4':'#d8c28f';}
+function normalizeName(name){return (name||'').toLowerCase().replace(/\.[^.]+$/,'').replace(/[\s-]+/g,'_')}
+function loadImageURL(url){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;})}
+function pickSprite(key){for(const alias of (spriteAliasSets[key]||[key])){if(assetState.sprites[alias])return {img:assetState.sprites[alias],meta:{...spriteDefaults[key],...(assetState.meta[alias]||{})}};}return null}
+async function applyManifest(manifest, base=''){
+ const nextSprites={},nextMeta={}; const entries=manifest.sprites||manifest.images||{};
+ for(const [raw,val] of Object.entries(entries)){
+  const alias=normalizeName(raw); let src='',meta={};
+  if(typeof val==='string'){src=val}else if(val&&typeof val==='object'){src=val.src||val.path||'';meta={width:val.width,height:val.height,anchorX:val.anchorX,anchorY:val.anchorY,dx:val.dx||0,dy:val.dy||0}}
+  if(!src) continue; const img=await loadImageURL(base+src); nextSprites[alias]=img; nextMeta[alias]=meta;
+ }
+ if(Object.keys(nextSprites).length){assetState.enabled=true; assetState.sprites=nextSprites; assetState.meta=nextMeta; assetState.source='local';setAssetStatus(`LOCAL SPRITE MODE · ON (${Object.keys(nextSprites).length})`,true);syncSpriteToggle();}
+}
+async function tryAutoLocalPack(){
+ try{const res=await fetch('./local_assets/manifest.json',{cache:'no-store'}); if(!res.ok) return; const manifest=await res.json(); await applyManifest(manifest,'./local_assets/');}
+ catch(err){}
+}
+assetBtn.addEventListener('click',()=>assetInput.click());
+assetInput.addEventListener('change',async e=>{
+ const files=[...(e.target.files||[])]; if(!files.length) return; const json=files.find(f=>/manifest\.json$/i.test(f.name));
+ const nextSprites={},nextMeta={};
+ if(json){try{const manifest=JSON.parse(await json.text()); const entries=manifest.sprites||manifest.images||{}; for(const [raw,val] of Object.entries(entries)){ let src='',meta={}; if(typeof val==='string'){src=val}else if(val&&typeof val==='object'){src=val.src||val.path||'';meta={width:val.width,height:val.height,anchorX:val.anchorX,anchorY:val.anchorY,dx:val.dx||0,dy:val.dy||0}} const file=files.find(f=>f.webkitRelativePath.endsWith(src)||f.name===src); if(!file) continue; const alias=normalizeName(raw); const img=await loadImageURL(URL.createObjectURL(file)); nextSprites[alias]=img; nextMeta[alias]=meta; }}catch(err){console.warn(err)}}
+ if(!Object.keys(nextSprites).length){ for(const file of files){ if(!file.type.startsWith('image/')) continue; const alias=normalizeName(file.name); nextSprites[alias]=await loadImageURL(URL.createObjectURL(file)); }}
+ if(Object.keys(nextSprites).length){assetState.enabled=true; assetState.sprites=nextSprites; assetState.meta=nextMeta; assetState.source='local';setAssetStatus(`LOCAL SPRITE MODE · ON (${Object.keys(nextSprites).length})`,true);syncSpriteToggle();} else setAssetStatus('LOCAL SPRITE MODE · PACK NOT FOUND',false);
+});
+if(q.get('assets')!=='0') tryAutoLocalPack();
+
+// Kenney's Sci-Fi RTS artwork is CC0. These images load from the original
+// publicly available repository at runtime and are never bundled with Blizzard assets.
+// The articulated tank stays 3D so its glance/return comedy beat cannot be lost.
+const CC0_ROOT='https://raw.githubusercontent.com/shorepine/kenney/main/2d/RTS%20Sci-fi/';
+const cc0Pack={
+  factory:CC0_ROOT+'Structure/scifiStructure_13.png',
+  machine_shop:CC0_ROOT+'Structure/scifiStructure_14.png',
+  armory:CC0_ROOT+'Structure/scifiStructure_07.png',
+  supply_depot:CC0_ROOT+'Structure/scifiStructure_02.png',
+  bunker_frame:CC0_ROOT+'Structure/scifiStructure_05.png',
+  marine:CC0_ROOT+'Unit/scifiUnit_07.png',
+  marine_react:CC0_ROOT+'Unit/scifiUnit_07.png',
+  scv:CC0_ROOT+'Unit/scifiUnit_09.png'
+};
+function syncSpriteToggle(){
+  spriteToggle.textContent=assetState.enabled?'그래픽: 혼합':'그래픽: 3D';
+  spriteToggle.setAttribute('aria-pressed',String(assetState.enabled));
+}
+async function autoLoadCC0(){
+  if(q.get('skin')==='0'||q.get('assets')==='0') return;
+  const entries=await Promise.allSettled(Object.entries(cc0Pack).map(async([k,url])=>[k,await loadImageURL(url)]));
+  const sprites=Object.fromEntries(entries.filter(x=>x.status==='fulfilled').map(x=>x.value));
+  if(Object.keys(sprites).length<4){setAssetStatus('CC0 그래픽 로드 불가 · 3D 유지');return;}
+  if(assetState.source==='local')return;
+  assetState.sprites=sprites;assetState.meta={};assetState.source='cc0';assetState.enabled=true;
+  setAssetStatus(`CC0 SCI-FI · ${Object.keys(sprites).length} ASSETS`,true);
+  syncSpriteToggle();
+}
+spriteToggle.addEventListener('click',()=>{
+  assetState.enabled=!assetState.enabled;
+  if(assetState.enabled&&!Object.keys(assetState.sprites).length){autoLoadCC0()}
+  else setAssetStatus(assetState.enabled?(assetState.source==='local'?'로컬 그래픽 모드':'CC0 그래픽 모드'):'순수 3D 모드',assetState.enabled);
+  syncSpriteToggle();
+});
+if(q.get('skin')!=='0')autoLoadCC0();
+
 const btn=$('pause');function syncBtn(){btn.textContent=playing?'Ⅱ':'▶';btn.setAttribute('aria-label',playing?'일시정지':'재생');btn.title=playing?'일시정지 (Space)':'재생 (Space)'}syncBtn();
 function toggle(){playing=!playing;syncBtn()}btn.addEventListener('click',toggle);addEventListener('keydown',e=>{if(e.code==='Space'&&e.target.tagName!=='BUTTON'){e.preventDefault();toggle()}});
 function drawGPU(rec){bindGPU(rec);gl.drawArrays(gl.TRIANGLES,0,rec.count)}
@@ -339,6 +414,11 @@ function particles(t,flash){ctx.clearRect(0,0,overlay.width,overlay.height);ctx.
  const lamps=[[.55,1.1,-1.28,165,'253,168,93'],[-3.5,1.8,-2.43,105,'233,141,65'],[3.43,1.12,-1.86,80,'99,230,176']];for(let [x,y,z,r,c] of lamps){let p=project3(x,y,z),g=ctx.createRadialGradient(...p,0,...p,r);g.addColorStop(0,`rgba(${c},.23)`);g.addColorStop(.36,`rgba(${c},.045)`);g.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,r,0,Math.PI*2);ctx.fill()}
  if(flash>.03){let p=project3(4.06,.53,2.35),g=ctx.createRadialGradient(...p,0,...p,26);g.addColorStop(0,`rgba(255,244,185,${flash*.88})`);g.addColorStop(1,'rgba(230,152,70,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,26,0,Math.PI*2);ctx.fill();}
 }
+function drawSpriteFrame(key,x,y,z){const picked=pickSprite(key); if(!picked) return; const p=project3(x,y,z),meta=picked.meta,w=meta.width||120,h=meta.height||90,ax=meta.anchorX??.5,ay=meta.anchorY??.9,dx=meta.dx||0,dy=meta.dy||0; ctx.save(); ctx.imageSmoothingEnabled=false; ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=10; const screenScale=Math.min(1.25,Math.max(.33,(width/23.1)/51.9)); ctx.globalAlpha=assetState.source==='cc0'?.87:1; ctx.drawImage(picked.img,p[0]-(w*screenScale)*ax+dx*screenScale,p[1]-(h*screenScale)*ay+dy*screenScale,w*screenScale,h*screenScale); ctx.restore();}
+function drawSpritePack(phase,out,react,watch){ if(!assetState.enabled) return; const tankX=.55, tankZ=-1.30+out*2.38; const entries=[
+ ['armory',-3.52,2.6,-3.42],['supply_depot',-3.48,1.68,-.87],['factory',.55,3.0,-2.95],['machine_shop',3.43,2.25,-2.94],['bunker_frame',3.91,1.22,2.18],
+ [react>.05&&pickSprite('marine_react')?'marine_react':'marine',-1.52,1.85,2.18],['marine',-3.15,1.82,1.45],['scv',4.05,1.0,2.28]
+ ]; if(assetState.source==='local'&&phase>=7.7 && phase<29.5) entries.push([watch>.25&&pickSprite('siege_tank_look')?'siege_tank_look':'siege_tank',tankX,1.35,tankZ]); entries.sort((a,b)=>{ const da=Math.hypot(eye[0]-a[1],eye[1]-a[2],eye[2]-a[3]), db=Math.hypot(eye[0]-b[1],eye[1]-b[2],eye[2]-b[3]); return db-da;}); for(const [key,x,y,z] of entries) drawSpriteFrame(key,x,y,z); }
 // The full event is deterministic. Wind, SCV and rotating fans are independent of the tank loop.
 function frame(ms){if(!last)last=ms;let dt=Math.min((ms-last)*.001,.06);last=ms;if(playing)clock+=dt;let t=clock,phase=t%35;
  const out=phase<8?0:phase<14.8?S(8,14.8,phase):phase<20.8?1:phase<29.2?1-S(20.8,29.2,phase):0;
@@ -347,7 +427,7 @@ function frame(ms){if(!last)last=ms;let dt=Math.min((ms-last)*.001,.06);last=ms;
  const d= new Float32Array(dyn.data);gl.bindBuffer(gl.ARRAY_BUFFER,dynGPU.buff);gl.bufferData(gl.ARRAY_BUFFER,d,gl.DYNAMIC_DRAW);dynGPU.count=d.length/9;
  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(.019,.055,.073,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.uniformMatrix4fv(vpLoc,false,new Float32Array(vp));gl.uniform3fv(camLoc,new Float32Array(eye));gl.bindVertexArray(vao);
  drawGPU(staticGPU);drawGPU(buildingGPU);drawGPU(dynGPU);
- const welding=(t%18)%6<3.9,flash=welding?(Math.sin(t*23)>0.45?1:0):0;particles(t,flash);$('progress').style.width=(phase/35*100)+'%';requestAnimationFrame(frame)}
+ const welding=(t%18)%6<3.9,flash=welding?(Math.sin(t*23)>0.45?1:0):0;particles(t,flash);drawSpritePack(phase,out,react,watch);$('progress').style.width=(phase/35*100)+'%';requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 </script>
 </body>
