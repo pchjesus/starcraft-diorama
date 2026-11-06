@@ -20,8 +20,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected="$(sha256sum 3d.html | awk '{print $1}')"
-          echo "Expected main SHA256: $expected"
+          # On PRs, the candidate 3d.html is intentionally different from deployed main.
+          # Compare Pages to the current main instead; pushes verify deployed candidate bytes.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --depth=1 origin main
+            expected="$(git show FETCH_HEAD:3d.html | sha256sum | awk '{print $1}')"
+          else
+            expected="$(sha256sum 3d.html | awk '{print $1}')"
+          fi
+          echo "Expected SHA256 for published main: $expected"
           url="https://pchjesus.github.io/starcraft-diorama/3d.html"
           for i in $(seq 1 30); do
             if curl --fail --silent --show-error --location --connect-timeout 5 --max-time 18 \

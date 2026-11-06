@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071318">
-<title>Factory After Hours · Brood War 3D Pass v1.0-D</title>
+<title>Factory After Hours · 3D Visual &amp; Scale Pass v1.1</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071318;color:#ecf2eb}
@@ -20,6 +20,11 @@
 
 #spriteToggle,#assetBtn{height:34px;padding:0 12px;border-radius:999px;border:1px solid #9faeb755;background:#0c1d24c9;color:#eaf1df;font-size:11px;letter-spacing:.05em;cursor:pointer}
 #spriteToggle:hover,#spriteToggle:focus-visible,#assetBtn:hover,#assetBtn:focus-visible{background:#25454d;outline-color:#a6dbce}
+/* v1.1: keep all legacy controls but let the miniature lead visually. */
+#assetBtn,#spriteToggle{background:#0c1d24a3;border-color:#90a6aa35;color:#b8c4bd}
+#badge{opacity:.52}
+@media (max-height:440px){#hud{bottom:9px;gap:7px}#pause{width:33px;height:33px}#assetBtn,#spriteToggle{height:29px;padding:0 9px}.eyebrow,.subtitle,#assetMode{display:none}#badge{bottom:10px;font-size:8px}}
+
 #assetMode{display:block;font-size:10px;color:#d8c28f;margin-top:3px}
 #assetInput{display:none}
 @media(max-width:640px){#hud{left:12px;bottom:15px;gap:8px;flex-wrap:wrap;max-width:92vw}#pause{width:36px;height:36px}#spriteToggle,#assetBtn{height:30px;padding:0 10px;font-size:10px}.title{font-size:13px}.subtitle{display:none}#badge{right:12px;bottom:16px;font-size:8px}}
@@ -28,7 +33,7 @@
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
 <div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><button id="assetBtn" type="button" title="로컬 스타1 그래픽팩 불러오기">로컬 그래픽팩</button><button id="spriteToggle" type="button" title="스프라이트 레이어 전환">그래픽: 3D</button><input id="assetInput" type="file" accept="image/*,.json" multiple webkitdirectory directory><div><div class="eyebrow">SCENE 01 / BROOD WAR MODEL PASS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div><span id="assetMode">LOCAL SPRITE MODE · OFF</span></div></div>
-<div id="badge">V1.0-D · TERRAN BUILDING PASS · NO AUDIO</div><div id="progress"></div>
+<div id="badge">V1.1 · VISUAL PROPORTIONS · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
@@ -172,6 +177,12 @@ function factory(b){b.push(.55,0,-2.95);
  warningMark(b,0,.43,1.89,1.30);
  // Distinct side hatch, red warning lamps and a horizontal cooling grille.
  b.box(1.94,1.32,-.56,.09,1.00,.94,'#314a54','#21353e');
+ // The original Factory reads with red structural stripes and black recessed vents.
+ for(const zz of [-.96,.60])b.box(1.993,1.66,zz,.066,.68,.14,'#9b4549','#5e3039');
+ for(const xx of [-1.23,1.23]){
+  b.box(xx,2.87,.18,.23,.12,.42,'#9e4d51','#5f343c');
+  b.box(xx,2.90,-.03,.19,.055,.18,'#d27765','#65464a');
+ }
  for(let j=0;j<5;j++)b.box(2.005,.99+j*.155,-.57,.060,.045,.70,'#71848a','#354951');
  for(let i=0;i<3;i++){b.box(1.98,.95+i*.38,-.99,.065,.11,.14,'#d6a35d','#594a3a')}
  for(let j=0;j<8;j++)b.box(-1.71+j*.46,.98,-1.51,.10,.34,.08,j%2?'#485d65':'#73868a','#425760');
@@ -180,7 +191,7 @@ function factory(b){b.push(.55,0,-2.95);
  b.pop();
 }
 // Armory's round open machinery + red conduits + tall service towers (not a solid shed).
-function armory(b){b.push(-3.52,0,-3.42);
+function armory(b){b.push(-3.52,0,-3.42);b.stack.push(M.mul(b.matrix,M.S(1.25,.73,1.08)));
  // Existing footprint is retained; center machine is visible within the frame.
  b.box(0,.36,0,2.50,.51,1.91,'#50616a','#303e49');
  armorWedge(b,0,.66,0,2.37,2.17,.28,1.79,1.59,'#657780','#344d57');
@@ -222,12 +233,12 @@ function armory(b){b.push(-3.52,0,-3.42);
   b.cylinder(s*1.03,1.70,.82,.21,.11,'#3c555b','#9ba9a1',9);
   b.box(s*1.03,1.46,1.00,.12,.19,.055,'#73d69c','#345d55');
  }
- // Preserve elevated rotating fan at its pre-existing fixed world coordinates.
+ // Scaled fan seat retains original location relative to the armory tower.
  b.box(-.28,2.91,-.20,.85,.12,.74,'#53676d','#334b55');
- b.pop();
+ b.pop();b.pop();
 }
 // Supply Depot: low sprawling logistics dock, twin face fans, green bay and red cartridges.
-function supply(b){b.push(-3.48,0,-.87);
+function supply(b){b.push(-3.48,0,-.87);b.stack.push(M.mul(b.matrix,M.S(1.20,1.20,1.10)));
  b.box(0,.35,0,2.19,.50,2.19,'#536772','#354d58');
  for(const s of [-1,1]){
   b.box(s*.91,.32,-.01,.38,.46,1.74,'#72858b','#405861');
@@ -270,7 +281,7 @@ function supply(b){b.push(-3.48,0,-.87);
  b.box(1.02,.43,.60,.15,.18,.22,'#67d891','#356755');
  b.cylinder(.90,.50,-.80,.15,.39,'#4f6469','#899590',9);
  b.cylinder(.90,.72,-.80,.21,.07,'#9b9a8e','#526a70',9);
- b.pop();
+ b.pop();b.pop();
 }
 // Factory's right-hand add-on: clearly smaller, physically joined by a service coupler.
 function machineShop(b){b.push(3.43,0,-2.94);
@@ -299,17 +310,31 @@ function machineShop(b){b.push(3.43,0,-2.94);
  for(let j=0;j<4;j++)b.box(-.68+j*.39,.29,-.91,.24,.12,.17,j%2?'#bb985d':'#455861','#52646c');
  b.pop();
 }
-function bunker(b){b.push(3.91,0,2.18);b.box(0,.15,0,1.83,.16,1.66,'#566e70','#36454a');
- for(let x of [-.83,.83])for(let z of [-.72,.72]){b.box(x,.57,z,.14,1.05,.14,'#849b9a','#607982');b.box(x,1.1,z,.22,.14,.22,'#b4bdb2','#6e8583')}
+// The static incomplete bunker remains intentionally half-built forever.
+function bunker(b){
+ b.push(3.91,0,2.18);
+ b.stack.push(M.mul(b.matrix,M.S(1.19,1.13,1.12)));
+ b.box(0,.15,0,1.83,.16,1.66,'#566e70','#36454a');
+ // Four reinforced uprights and exposed roof beams, never closed off by a roof.
+ for(let x of [-.83,.83])for(let z of [-.72,.72]){
+  b.box(x,.57,z,.14,1.05,.14,'#849b9a','#607982');
+  b.box(x,1.10,z,.22,.14,.22,'#b4bdb2','#6e8583');
+  b.box(x,1.17,z,.16,.10,.16,'#b59b65','#6a674c');
+ }
  for(let z of [-.7,.7])b.box(0,.86,z,1.8,.12,.13,'#8da6a6','#607d7e');
  for(let x of [-.83,.83])b.box(x,.86,0,.14,.12,1.54,'#829e9f','#537079');
- // An eternal construction frame: no growth, no progress meter, no reset pop.
- for(let x of [-.43,.43])b.box(x,.34,.24,.35,.25,.35,'#6f7b73','#4d605d');b.pop()}
+ // Only partial waist-height armor bays, so it still reads as construction.
+ b.box(-.47,.44,.77,.58,.39,.09,'#586970','#394b53');
+ b.box(.48,.37,-.77,.65,.29,.09,'#607780','#3a515c');
+ for(let x of [-.43,.43])b.box(x,.34,.24,.35,.25,.35,'#6f7b73','#4d605d');
+ for(let x of [-.50,.50])b.box(x,.34,.834,.36,.08,.06,'#a89665','#4d5755');
+ b.pop();b.pop();
+}
 function factoryStatic(b){factory(b);machineShop(b);armory(b);supply(b);bunker(b);
  // Static industrial exterior fixtures, bolt pattern and side pipes.
  for(let i=0;i<8;i++)b.box(-1.03+i*.22,.17,-1.28,.1,.025,.15,i%2?'#c8a263':'#384a49','#43534c');
 }
-function animatedFans(b,t){fan(b,-.19,2.79,-3.37,.53,t);fan(b,3.39,2.36,-3.09,.58,t*.95);fan(b,-3.48,1.74,-.87,.41,t*.75);fan(b,-3.8,3.15,-3.62,.30,t*.85)}
+function animatedFans(b,t){fan(b,-.19,2.79,-3.37,.53,t);fan(b,3.39,2.36,-3.09,.58,t*.95);fan(b,-3.48,2.03,-.87,.43,t*.75);fan(b,-3.87,2.34,-3.64,.30,t*.85)}
 // Telescoping four-panel blast door clears the broad Arclite tracks without widening the factory hull.
 // 6.2–7.7 opening precedes the 8.0-second tank motion; closing starts after the tank vanishes.
 function factoryShutter(b,phase){
@@ -335,7 +360,7 @@ function marine(b,x,z,t,lead,react,watch){
  const breath=Math.sin(t*.72+(lead?0:1.4))*.020;
  const crouch=react*.075, lean=-react*.09;
  b.push(tx,.16,tz,lead?-.13:0,lean);
- b.stack.push(M.mul(b.matrix,M.S(.81,.81,.81)));
+ b.stack.push(M.mul(b.matrix,M.S(.73,.73,.73)));
  // Wide metal sabatons, separate armored shin + kneecap, short thighs.
  for(const side of [-1,1]){
   const step=side<0&&lead?react*.17:0;
@@ -501,15 +526,22 @@ function tank(b,x,z,t,dist,turn){
   }
   b.pop();b.pop();
 }
-// v1.0-C initial gameplay proportion + independent SCV construction rig.
-// Work spot itinerary, weld timing and the perpetually incomplete bunker are unchanged.
+// Shared movement path: the SCV stays OUTSIDE the unfinished bunker.
+function scvWorkPose(t){
+ const spots=[[5.22,3.37],[5.39,3.18],[5.20,3.54]];
+ const phase=t%18,k=Math.floor(phase/6),p=phase%6,move=S(4.1,5.5,p);
+ const x=lerp(spots[k][0],spots[(k+1)%3][0],move);
+ const z=lerp(spots[k][1],spots[(k+1)%3][1],move);
+ const yaw=-2.05+(k-1)*.13; // hydraulic tools point inward, toward the frame.
+ return {x,z,yaw,phase,k};
+}
+// v1.1: independent articulated welding rig, three work positions and unchanged 18s period.
 function scv(b,t){
- const spots=[[4.53,2.92],[4.20,2.76],[4.34,3.21]],phase=t%18,k=Math.floor(phase/6),p=phase%6;
- const move=S(4.1,5.5,p),x=lerp(spots[k][0],spots[(k+1)%3][0],move),z=lerp(spots[k][1],spots[(k+1)%3][1],move);
+ const {x,z,yaw,phase}=scvWorkPose(t);
  const bob=Math.sin(t*2.6)*.023,weld=(phase%6)<3.9;
- b.push(x,.18+bob,z,-.55+(k-1)*.23);
- // Game sprite-based height: 1.4–1.6x marine; width restrained for bunker clearance.
- b.stack.push(M.mul(b.matrix,M.S(1.34,2.18,1.36)));
+ b.push(x,.18+bob,z,yaw);
+ // StarCraft 1 gameplay footprint guidance: SCV wider than a marine, smaller than a tank; scene-height goal ~1.4-1.6x marine.
+ b.stack.push(M.mul(b.matrix,M.S(.68,1.95,.82)));
  // Dual pointed stabilizer feet / chassis below the blue-grey utility body.
  for(const side of [-1,1]){
    b.box(side*.37,.145,.26,.38,.24,.44,'#324657','#20313d');
@@ -654,14 +686,16 @@ const bugs=Array.from({length:42},()=>({x:rnd(-8,8),z:rnd(-8,8),y:rnd(.2,3.6),ph
 const smoke=Array.from({length:17},(_,i)=>({p:i/17,sz:rnd(.4,1.0),drift:rnd(-.5,.5)}));
 function particles(t,flash){ctx.clearRect(0,0,overlay.width,overlay.height);ctx.setTransform(ratio,0,0,ratio,0,0);
  for(let f of bugs){const p=project3(f.x+Math.sin(t*f.speed+f.phase)*.17,f.y+Math.sin(t*.9+f.phase)*.12,f.z+Math.cos(t*f.speed*.77+f.phase)*.13);let k=(1+Math.sin(t*f.speed*3+f.phase))*.5;if(k<.3)continue;ctx.fillStyle=`rgba(177,220,140,${k*.63})`;ctx.beginPath();ctx.arc(...p,f.size*k,0,Math.PI*2);ctx.fill();}
- for(const chimney of [[1.4,3.52,-3.87],[-4.21,4.25,-3.69]]){for(const s of smoke){let k=(s.p+t*.048)%1,px=chimney[0]+s.drift*k*.4,py=chimney[1]+k*2.8,pz=chimney[2]+Math.sin(k*6+s.p*9)*.19;let pt=project3(px,py,pz),radius=(4+14*k)*ratio;ctx.fillStyle=`rgba(173,187,180,${.11*(1-k)})`;ctx.beginPath();ctx.ellipse(pt[0],pt[1],radius,radius*.55,0,0,Math.PI*2);ctx.fill()}}
+ for(const chimney of [[1.4,3.52,-3.87],[-4.38,3.13,-3.71]]){for(const s of smoke){let k=(s.p+t*.048)%1,px=chimney[0]+s.drift*k*.4,py=chimney[1]+k*2.8,pz=chimney[2]+Math.sin(k*6+s.p*9)*.19;let pt=project3(px,py,pz),radius=(4+14*k)*ratio;ctx.fillStyle=`rgba(173,187,180,${.11*(1-k)})`;ctx.beginPath();ctx.ellipse(pt[0],pt[1],radius,radius*.55,0,0,Math.PI*2);ctx.fill()}}
  const lamps=[[.55,1.1,-1.28,165,'253,168,93'],[-3.5,1.8,-2.43,105,'233,141,65'],[3.43,1.12,-1.86,80,'99,230,176']];for(let [x,y,z,r,c] of lamps){let p=project3(x,y,z),g=ctx.createRadialGradient(...p,0,...p,r);g.addColorStop(0,`rgba(${c},.23)`);g.addColorStop(.36,`rgba(${c},.045)`);g.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,r,0,Math.PI*2);ctx.fill()}
- if(flash>.03){let p=project3(4.06,.53,2.35),g=ctx.createRadialGradient(...p,0,...p,26);g.addColorStop(0,`rgba(255,244,185,${flash*.88})`);g.addColorStop(1,'rgba(230,152,70,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,26,0,Math.PI*2);ctx.fill();}
+ if(flash>.03){const w=scvWorkPose(t);
+   const p=project3(w.x+Math.sin(w.yaw)*.88,.92,w.z+Math.cos(w.yaw)*.88);
+   const g=ctx.createRadialGradient(...p,0,...p,26);g.addColorStop(0,`rgba(255,244,185,${flash*.88})`);g.addColorStop(1,'rgba(230,152,70,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,26,0,Math.PI*2);ctx.fill();}
 }
 function drawSpriteFrame(key,x,y,z){const picked=pickSprite(key); if(!picked) return; const p=project3(x,y,z),meta=picked.meta,w=meta.width||120,h=meta.height||90,ax=meta.anchorX??.5,ay=meta.anchorY??.9,dx=meta.dx||0,dy=meta.dy||0; ctx.save(); ctx.imageSmoothingEnabled=false; ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=10; const screenScale=Math.min(1.25,Math.max(.33,(width/23.1)/51.9)); ctx.globalAlpha=assetState.source==='cc0'?.87:1; ctx.drawImage(picked.img,p[0]-(w*screenScale)*ax+dx*screenScale,p[1]-(h*screenScale)*ay+dy*screenScale,w*screenScale,h*screenScale); ctx.restore();}
-function drawSpritePack(phase,out,react,watch){ if(!assetState.enabled) return; const tankX=.55, tankZ=-1.30+out*2.38; const entries=[
+function drawSpritePack(phase,out,react,watch,t){ if(!assetState.enabled) return; const tankX=.55, tankZ=-1.30+out*2.38; const worker=scvWorkPose(t); const entries=[
  ['armory',-3.52,2.6,-3.42],['supply_depot',-3.48,1.68,-.87],['factory',.55,3.0,-2.95],['machine_shop',3.43,2.25,-2.94],['bunker_frame',3.91,1.22,2.18],
- [react>.05&&pickSprite('marine_react')?'marine_react':'marine',-1.52,1.85,2.18],['marine',-3.15,1.82,1.45],['scv',4.05,1.0,2.28]
+ [react>.05&&pickSprite('marine_react')?'marine_react':'marine',-1.52,1.85,2.18],['marine',-3.15,1.82,1.45],['scv',worker.x,1.2,worker.z]
  ]; if(assetState.source==='local'&&phase>=7.7 && phase<29.5) entries.push([watch>.25&&pickSprite('siege_tank_look')?'siege_tank_look':'siege_tank',tankX,1.35,tankZ]); entries.sort((a,b)=>{ const da=Math.hypot(eye[0]-a[1],eye[1]-a[2],eye[2]-a[3]), db=Math.hypot(eye[0]-b[1],eye[1]-b[2],eye[2]-b[3]); return db-da;}); for(const [key,x,y,z] of entries) drawSpriteFrame(key,x,y,z); }
 // The full event is deterministic. Wind, SCV and rotating fans are independent of the tank loop.
 function frame(ms){if(!last)last=ms;let dt=Math.min((ms-last)*.001,.06);last=ms;if(playing)clock+=dt;let t=clock,phase=t%35;
@@ -671,7 +705,7 @@ function frame(ms){if(!last)last=ms;let dt=Math.min((ms-last)*.001,.06);last=ms;
  const d= new Float32Array(dyn.data);gl.bindBuffer(gl.ARRAY_BUFFER,dynGPU.buff);gl.bufferData(gl.ARRAY_BUFFER,d,gl.DYNAMIC_DRAW);dynGPU.count=d.length/9;
  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(.019,.055,.073,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.uniformMatrix4fv(vpLoc,false,new Float32Array(vp));gl.uniform3fv(camLoc,new Float32Array(eye));gl.bindVertexArray(vao);
  drawGPU(staticGPU);drawGPU(buildingGPU);drawGPU(dynGPU);
- const welding=(t%18)%6<3.9,flash=welding?(Math.sin(t*23)>0.45?1:0):0;particles(t,flash);drawSpritePack(phase,out,react,watch);$('progress').style.width=(phase/35*100)+'%';requestAnimationFrame(frame)}
+ const welding=(t%18)%6<3.9,flash=welding?(Math.sin(t*23)>0.45?1:0):0;particles(t,flash);drawSpritePack(phase,out,react,watch,t);$('progress').style.width=(phase/35*100)+'%';requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 </script>
 </body>
