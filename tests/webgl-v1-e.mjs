@@ -133,7 +133,7 @@ async function check(phase,width,height,mobile=false){
   }finally{await context.close();}
 }
 try {
-  browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+  browser=await chromium.launch({headless:true,channel:process.env.PW_BROWSER_CHANNEL||undefined,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
   for(const p of phases)await check(p,1280,720);
   await check(18,390,844,true);await check(18,844,390,true);
   report.conclusion='PASS';
