@@ -45,6 +45,10 @@ async function check(phase,width,height,mobile=false){
     assert.equal(state.pause,'재생',label+': pause initial state');
     assert.ok(Math.abs(state.progress-phase/35*100)<.8,label+': incorrect phase progress');
     assert.deepEqual(errors,[],label+': uncaught JavaScript errors');
+    // A real screen-space check: the highest old Armory chimney must remain inside
+    // both desktop and landscape-phone viewports (prior version cropped it).
+    const topLandmarkY=await page.evaluate(()=>project3(-4.21,4.25,-3.69)[1]);
+    assert.ok(topLandmarkY>=12,label+': Armory roof landmark clipped at '+topLandmarkY);
     const pngBuffer=await page.locator('#stage').screenshot({path:join(folder,label+'.png')});
     const png=PNG.sync.read(pngBuffer),colors=new Set();
     let lit=0,total=0;
@@ -53,7 +57,7 @@ async function check(phase,width,height,mobile=false){
       colors.add(r+','+g+','+b);if(r+g+b>=65)lit++;total++;
     }
     assert.ok(colors.size>=30 && lit/total>.03,label+': black or blank canvas');
-    report.checks.push({label,phase,version:state.version,colors:colors.size,litFraction:+(lit/total).toFixed(3),bytes:pngBuffer.length});
+    report.checks.push({label,phase,version:state.version,colors:colors.size,litFraction:+(lit/total).toFixed(3),bytes:pngBuffer.length,armoryRoofY:+topLandmarkY.toFixed(1)});
     if(phase===18 && width===1280){
       const getProgress=()=>page.locator('#progress').evaluate(el=>parseFloat(el.style.width));
       const before=await getProgress();
