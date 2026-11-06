@@ -70,6 +70,20 @@ async function check(phase,width,height,mobile=false){
       assert.equal(await getProgress(),held,'pause did not stop time');
       assert.equal(await page.locator('#pause').getAttribute('aria-label'),'재생');
       report.playPause='PASS';
+    } else if(phase===18 && mobile) {
+      // Genuine mobile browser touch input (not a synthetic desktop click).
+      const getProgress=()=>page.locator('#progress').evaluate(el=>parseFloat(el.style.width));
+      const before=await getProgress();
+      await page.locator('#pause').tap();
+      await page.waitForTimeout(350);
+      assert.ok(await getProgress()>before,label+': mobile tap did not play');
+      assert.equal(await page.locator('#pause').getAttribute('aria-label'),'일시정지');
+      await page.locator('#pause').tap();
+      const stopped=await getProgress();
+      await page.waitForTimeout(260);
+      assert.equal(await getProgress(),stopped,label+': mobile tap did not pause');
+      assert.equal(await page.locator('#pause').getAttribute('aria-label'),'재생');
+      report.mobileTouch=(report.mobileTouch||0)+1;
     }
     console.log('PASS '+label+' | '+colors.size+' colors | '+state.version);
   }finally{await context.close();}
