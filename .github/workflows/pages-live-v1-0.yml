@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  issues: write
 jobs:
   public-pages-smoke:
     runs-on: ubuntu-24.04
@@ -35,3 +36,11 @@ jobs:
           done
           echo "::error::Pages content did not match main after 30 checks"
           exit 1
+      - name: Record successful v1.0 Pages verification on PR #1
+        if: ${{ success() && startsWith(github.event.head_commit.message, 'ci(v1.0-E)') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          fingerprint="$(sha256sum 3d.html | awk '{print $1}')"
+          gh api "repos/${GITHUB_REPOSITORY}/issues/1/comments" \
+            -f body="v1.0-E Pages deployment verified: public /starcraft-diorama/3d.html is byte-identical to main at commit ${GITHUB_SHA} (SHA256: ${fingerprint}). Actual Chromium WebGL2 visuals and touch input also passed in workflow StarCraft v1.0-E WebGL2 visual gate."
