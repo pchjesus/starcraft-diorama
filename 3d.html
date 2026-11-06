@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071318">
-<title>Factory After Hours · Unit Silhouette Pass v1.2</title>
+<title>Factory After Hours · Unit Scale Pass v1.3</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071318;color:#ecf2eb}
@@ -33,7 +33,7 @@
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
 <div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><button id="assetBtn" type="button" title="로컬 스타1 그래픽팩 불러오기">로컬 그래픽팩</button><button id="spriteToggle" type="button" title="스프라이트 레이어 전환">그래픽: 3D</button><input id="assetInput" type="file" accept="image/*,.json" multiple webkitdirectory directory><div><div class="eyebrow">SCENE 01 / BROOD WAR MODEL PASS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div><span id="assetMode">LOCAL SPRITE MODE · OFF</span></div></div>
-<div id="badge">V1.2 · CLASSIC UNIT SILHOUETTES · NO AUDIO</div><div id="progress"></div>
+<div id="badge">V1.3 · UNIT SCALE PASS · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
@@ -164,14 +164,14 @@ function factory(b){b.push(.55,0,-2.95);
  }
  // Factory door remains at EXACT previous position; dynamic shutters unmodified.
  b.box(0,1.13,1.55,2.70,1.84,.13,'#243742','#20323c');
- b.box(0,1.08,1.64,2.43,1.36,.05,'#142832','#152730');
+ b.box(0,1.08,1.64,2.60,1.36,.05,'#142832','#152730');
  b.box(0,.37,1.75,2.68,.22,.32,'#6c787a','#37464f');
  for(const s of [-1,1]){
-  b.box(s*1.35,1.14,1.62,.29,1.98,.34,'#a0a9a2','#56696f');
+  b.box(s*1.44,1.14,1.62,.29,1.98,.34,'#a0a9a2','#56696f');
   b.box(s*1.43,1.30,1.20,.36,1.67,.31,'#7b8a8b','#435761');
   b.box(s*1.80,.49,1.08,.30,.35,.72,'#62757b','#394f5a');
-  b.box(s*1.35,1.65,1.84,.13,.20,.11,'#e4b16b','#9c6a3e');
-  for(let j=0;j<6;j++)b.box(s*1.36,.44+j*.29,1.82,.065,.075,.07,'#b8b9ac','#718580');
+  b.box(s*1.44,1.65,1.84,.13,.20,.11,'#e4b16b','#9c6a3e');
+  for(let j=0;j<6;j++)b.box(s*1.45,.44+j*.29,1.82,.065,.075,.07,'#b8b9ac','#718580');
   b.box(s*1.45,1.84,1.25,.08,.11,.37,'#253b45','#1b303a');
  }
  warningMark(b,0,.43,1.89,1.30);
@@ -342,7 +342,7 @@ function factoryShutter(b,phase){
  b.push(.55,0,-2.95);
  for(const side of [-1,1]){
   for(const part of [0,1]){
-   const closed=.305+part*.61,xx=side*lerp(closed,1.535,open),z=1.79+part*.025;
+   const closed=.305+part*.61,xx=side*lerp(closed,1.59,open),z=1.79+part*.025;
    b.box(xx,1.06,z,.610,1.18,.10,part?'#74868a':'#879799','#435863');
    for(let j=0;j<4;j++)b.box(xx,.62+j*.28,z+.061,.55,.035,.033,'#adb2a9','#566971');
    b.box(xx,1.52,z+.07,.48,.10,.037,'#c7ad78','#776848');
@@ -360,7 +360,7 @@ function marine(b,x,z,t,lead,react,watch){
  const breath=Math.sin(t*.72+(lead?0:1.4))*.020;
  const crouch=react*.075, lean=-react*.09;
  b.push(tx,.16,tz,lead?-.13:0,lean);
- b.stack.push(M.mul(b.matrix,M.S(.73,.73,.73)));
+ b.stack.push(M.mul(b.matrix,M.S(.75,.75,.75)));
  // Wide metal sabatons, separate armored shin + kneecap, short thighs.
  for(const side of [-1,1]){
   const step=side<0&&lead?react*.17:0;
@@ -456,6 +456,8 @@ function arcliteTwinBarrels(b){
 // Vehicle points towards +Z; turret is the sole part receiving the yaw rotation.
 function tank(b,x,z,t,dist,turn){
   b.push(x,.13,z);
+  // Widen tracks and hull ONLY: do not stretch the rotating turret or the shortened barrels.
+  b.stack.push(M.mul(b.matrix,M.S(1.075,1,1)));
   const iron='#32434c',treadEdge='#52656b';
   // Twin continuous tread silhouettes with detailed front/rear bogie armor.
   // Keep the overall footprint compatible with the existing factory exit.
@@ -517,6 +519,8 @@ function tank(b,x,z,t,dist,turn){
   // Rear cooling grille: recessed louvers rather than an uninterrupted flat roof.
   for(let j=0;j<5;j++)b.box(0,1.012,-.46-j*.123,.73,.027,.058,j%2?'#2f4952':'#384e57','#253941');
   b.box(0,.925,-1.016,1.08,.12,.12,'#a0aaa2','#5b6e72');
+  // The wider hull ends here. Keep turret yaw physically independent and undistorted.
+  b.pop();
   // Tank's circular turret ring stays attached to the hull.
   b.cylinder(0,1.033,-.14,.62,.14,'#3b535c','#94a6a1',12);
   b.cylinder(0,1.123,-.14,.51,.055,'#586e74','#a7b1a7',12);
@@ -560,7 +564,7 @@ function scv(b,t){
  const bob=Math.sin(t*2.6)*.023,weld=(phase%6)<3.9;
  b.push(x,.18+bob,z,yaw);
  // StarCraft 1 gameplay footprint guidance: SCV wider than a marine, smaller than a tank; scene-height goal ~1.4-1.6x marine.
- b.stack.push(M.mul(b.matrix,M.S(.68,1.95,.82)));
+ b.stack.push(M.mul(b.matrix,M.S(.65,1.88,.79)));
  // Dual pointed stabilizer feet / chassis below the blue-grey utility body.
  for(const side of [-1,1]){
    b.box(side*.37,.145,.26,.38,.24,.44,'#324657','#20313d');

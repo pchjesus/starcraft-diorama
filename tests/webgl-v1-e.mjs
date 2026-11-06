@@ -79,8 +79,8 @@ async function check(phase,width,height,mobile=false){
         }};
       });
       const ranges={
-        scvMarineHeight:[1.37,1.60],scvMarineWidth:[1.26,1.50],
-        tankMarineWidth:[1.70,2.15],shopFactory:[.55,.70],
+        scvMarineHeight:[1.40,1.48],scvMarineWidth:[1.32,1.42],
+        tankMarineWidth:[1.90,2.02],shopFactory:[.55,.70],
         armoryFactory:[.76,.91],depotFactory:[.62,.76],bunkerFactory:[.51,.66]
       };
       for(const [name,[low,high]]of Object.entries(ranges)){
@@ -116,6 +116,35 @@ async function check(phase,width,height,mobile=false){
       assert.ok(cannon.zMax<=1.16,'muzzle sticks out too far: '+cannon.zMax);
       assert.ok(cannon.zMax-.14<1.205,'muzzle exceeds the front of tank hull');
       report.arcliteTwinBarrels=cannon;
+      // The wider tank body must still fit the actual open gate and fixed support posts.
+      // Compare generated vertices, not a claimed official StarCraft dimension.
+      const exit=await page.evaluate(()=>{
+        const body=new Mesh();tank(body,0,0,18,1,0);
+        const gate=new Mesh();factoryShutter(gate,8);
+        const halfWidth=Math.max(...body.data.filter((_,i)=>i%9===0).map(Math.abs));
+        const openInner=Math.min(...gate.data.filter((_,i)=>i%9===0).map(v=>Math.abs(v-.55)));
+        const safety={
+          movingGate:openInner-halfWidth,
+          entrancePost:1.44-.29/2-halfWidth,
+          sideSupport:1.43-.36/2-halfWidth
+        };
+        const rotated=new Mesh();tank(rotated,0,0,18,1,-.85);
+        if(rotated.data.length!==body.data.length)throw Error('tank turn changes mesh size');
+        let firstDifference=-1;
+        for(let i=0;i<body.data.length;i++){
+          if(Math.abs(body.data[i]-rotated.data[i])>1e-6){firstDifference=i;break;}
+        }
+        return {halfWidth,openInner,safety,firstDifferenceFraction:firstDifference/body.data.length};
+      });
+      assert.ok(exit.safety.movingGate>=.045,
+        'Tank treads too close to opening shutter: '+exit.safety.movingGate);
+      assert.ok(exit.safety.entrancePost>=.045,
+        'Tank exceeds Factory door posts: '+exit.safety.entrancePost);
+      assert.ok(exit.safety.sideSupport>=.015,
+        'Tank too close to exterior door support: '+exit.safety.sideSupport);
+      assert.ok(exit.firstDifferenceFraction>.74,
+        'Hull or tracks rotate with turret; first changed mesh fraction '+exit.firstDifferenceFraction);
+      report.factoryExitClearance=exit;
     }
     // A real screen-space check: the highest old Armory chimney must remain inside
     // both desktop and landscape-phone viewports (prior version cropped it).
