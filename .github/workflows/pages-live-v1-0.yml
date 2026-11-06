@@ -1,0 +1,37 @@
+name: StarCraft v1.0 Pages live verification
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-pages-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare deployed 3D HTML byte for byte with main
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(sha256sum 3d.html | awk '{print $1}')"
+          echo "Expected main SHA256: $expected"
+          url="https://pchjesus.github.io/starcraft-diorama/3d.html"
+          for i in $(seq 1 30); do
+            if curl --fail --silent --show-error --location --connect-timeout 5 --max-time 18 \
+                "$url?verify=${GITHUB_SHA}&attempt=$i" -o /tmp/starcraft-pages-3d.html; then
+              actual="$(sha256sum /tmp/starcraft-pages-3d.html | awk '{print $1}')"
+              if [ "$actual" = "$expected" ]; then
+                echo "PASS: public GitHub Pages 3d.html byte-identical to main ($expected)"
+                exit 0
+              fi
+              echo "Attempt $i: live SHA256 $actual differs from main; awaiting deployment."
+            else
+              echo "Attempt $i: live Pages not yet reachable."
+            fi
+            sleep 12
+          done
+          echo "::error::Pages content did not match main after 30 checks"
+          exit 1
