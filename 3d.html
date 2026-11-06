@@ -158,15 +158,15 @@ function factory(b){b.push(.55,0,-2.95);
   b.cylinder(s*.90,3.69,-.99,.145,.085,'#1b3038','#405760',10);
  }
  // Factory door remains at EXACT previous position; dynamic shutters unmodified.
- b.box(0,1.13,1.55,2.22,1.84,.13,'#243742','#20323c');
- b.box(0,1.08,1.64,1.66,1.36,.05,'#142832','#152730');
- b.box(0,.37,1.75,2.42,.22,.32,'#6c787a','#37464f');
+ b.box(0,1.13,1.55,2.70,1.84,.13,'#243742','#20323c');
+ b.box(0,1.08,1.64,2.43,1.36,.05,'#142832','#152730');
+ b.box(0,.37,1.75,2.68,.22,.32,'#6c787a','#37464f');
  for(const s of [-1,1]){
-  b.box(s*1.14,1.14,1.62,.29,1.98,.34,'#a0a9a2','#56696f');
+  b.box(s*1.35,1.14,1.62,.29,1.98,.34,'#a0a9a2','#56696f');
   b.box(s*1.43,1.30,1.20,.36,1.67,.31,'#7b8a8b','#435761');
   b.box(s*1.80,.49,1.08,.30,.35,.72,'#62757b','#394f5a');
-  b.box(s*1.14,1.65,1.84,.13,.20,.11,'#e4b16b','#9c6a3e');
-  for(let j=0;j<6;j++)b.box(s*1.15,.44+j*.29,1.82,.065,.075,.07,'#b8b9ac','#718580');
+  b.box(s*1.35,1.65,1.84,.13,.20,.11,'#e4b16b','#9c6a3e');
+  for(let j=0;j<6;j++)b.box(s*1.36,.44+j*.29,1.82,.065,.075,.07,'#b8b9ac','#718580');
   b.box(s*1.45,1.84,1.25,.08,.11,.37,'#253b45','#1b303a');
  }
  warningMark(b,0,.43,1.89,1.30);
@@ -310,17 +310,23 @@ function factoryStatic(b){factory(b);machineShop(b);armory(b);supply(b);bunker(b
  for(let i=0;i<8;i++)b.box(-1.03+i*.22,.17,-1.28,.1,.025,.15,i%2?'#c8a263':'#384a49','#43534c');
 }
 function animatedFans(b,t){fan(b,-.19,2.79,-3.37,.53,t);fan(b,3.39,2.36,-3.09,.58,t*.95);fan(b,-3.48,1.74,-.87,.41,t*.75);fan(b,-3.8,3.15,-3.62,.30,t*.85)}
+// Telescoping four-panel blast door clears the broad Arclite tracks without widening the factory hull.
+// 6.2–7.7 opening precedes the 8.0-second tank motion; closing starts after the tank vanishes.
 function factoryShutter(b,phase){
- const open=S(7.3,9.7,phase)*(1-S(28.7,31,phase)),sh=1.0*open;
+ const open=S(6.2,7.7,phase)*(1-S(29.5,31.8,phase));
  b.push(.55,0,-2.95);
- for(let side of [-1,1]){
-   let xx=side*(.41+sh*.79);
-   b.box(xx,1.06,1.79,.77,1.18,.10,'#79898c','#46575f');
-   for(let j=0;j<4;j++)b.box(xx,.62+j*.28,1.85,.68,.035,.035,'#a7aaa0','#5c6263');
-   b.box(xx,1.52,1.86,.55,.11,.045,'#bd975f','#726445');
+ for(const side of [-1,1]){
+  for(const part of [0,1]){
+   const closed=.305+part*.61,xx=side*lerp(closed,1.535,open),z=1.79+part*.025;
+   b.box(xx,1.06,z,.610,1.18,.10,part?'#74868a':'#879799','#435863');
+   for(let j=0;j<4;j++)b.box(xx,.62+j*.28,z+.061,.55,.035,.033,'#adb2a9','#566971');
+   b.box(xx,1.52,z+.07,.48,.10,.037,'#c7ad78','#776848');
+   b.box(xx,1.065,z+.079,.051,1.02,.028,'#435760','#273c46');
+  }
  }
  b.pop();
 }
+
 function boxSegment(b,a,c,w,top='#69867b',side='#354e4b'){b.beam(a[0],a[1],a[2],c[0],c[1],c[2],w,top)}
 // v1.0-B / independently modeled StarCraft 1 CMC-style infantry silhouette.
 // Relative scene scale follows the original gameplay sprite comparison, not lore meters.
