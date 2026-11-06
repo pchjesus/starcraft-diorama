@@ -32,6 +32,14 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
+      - name: Ensure Korean text renders in screenshots
+        shell: bash
+        run: |
+          if ! fc-list :lang=ko 2>/dev/null | grep -q .; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends fonts-nanum
+            fc-cache -f
+          fi
       - name: Validate scene through real WebGL2 and capture 15 frames
         run: node tests/webgl-v1-e.mjs
       - name: Upload screenshots and JSON report (even on failure)
