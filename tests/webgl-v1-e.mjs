@@ -88,6 +88,20 @@ async function check(phase,width,height,mobile=false){
         assert.ok(ratio>=low&&ratio<=high,name+': '+ratio+' outside '+low+'–'+high);
       }
       report.proportions=sizes;
+      const workerSites=await page.evaluate(()=>{
+        const bbox=new Mesh();bunker(bbox);
+        let right=-Infinity,front=-Infinity;
+        for(let i=0;i<bbox.data.length;i+=9){right=Math.max(right,bbox.data[i]);front=Math.max(front,bbox.data[i+2]);}
+        const poses=[0,6,12,18].map(t=>scvWorkPose(t));
+        return {right,front,poses};
+      });
+      assert.ok(workerSites.poses.slice(0,3).every(p=>p.x>workerSites.right&&p.z>workerSites.front),
+        'SCV work centers must remain outside bunker frame');
+      const [a,b,c,loop]=workerSites.poses;
+      assert.ok(Math.hypot(a.x-b.x,a.z-b.z)>.15&&Math.hypot(b.x-c.x,b.z-c.z)>.15,
+        'SCV must visit three different sites');
+      assert.equal(loop.x,a.x);assert.equal(loop.z,a.z);
+      report.workerClearance=workerSites;
     }
     // A real screen-space check: the highest old Armory chimney must remain inside
     // both desktop and landscape-phone viewports (prior version cropped it).
