@@ -35,6 +35,18 @@
 - 18초 전차·마린·SCV 확대 크롭 3장과 전체 스크린샷을 함께 저장.
 - 새 실화면 검증 및 육안 확인 후에만 PR을 `main`으로 병합, 공개 Pages 검증.
 
+## v1.2 최종 실화면 검증 및 병합 기록 (2026-11-06)
+- 유닛 모델링 PR #5: https://github.com/pchjesus/starcraft-diorama/pull/5
+- 모델링 병합 `main` 커밋: `440f1ad73f7b187f1c23aa0089782b32b8a1e790`
+- 최종 실제 WebGL2 회귀: https://github.com/pchjesus/starcraft-diorama/actions/runs/42188863404 — **PASS**
+- 전체 PC 시점 13개 + 모바일 세로·가로 2개 = 15개 화면. 추가 유닛 확대 3장 저장.
+- WebGL2 렌더/비정상 좌표/포구 돌출·길이/PC 클릭·모바일 터치 2종/35초 루프/SCV 18초 루프/7개 상대 비례 **PASS**
+- 실제 메시 측정 결과: 쌍포신 로컬 앞뒤 범위 `0.204–1.125` (폭 `0.921`), SCV 높이/마린 높이 `1.516`, SCV 폭/마린 폭 `1.467`, 탱크 폭/마린 폭 `1.839` (참고치, 공식 치수 아님).
+- 코드를 비교해 `frame()` 타임라인, 지형, 건물, 카메라·야간 이펙트가 모두 기존 v1.1과 같음을 확인.
+- `index.html`·`original.html` 무수정.
+- 배포 URL: https://pchjesus.github.io/starcraft-diorama/3d.html
+- 공개 Pages 본문 SHA-256 검증: 별도 PR의 Pages 스모크로 확인 후 성공 여부 기록(검증 전에는 PASS라고 표시하지 않음).
+
 ## 참고문헌 (APA 7th)
 Blizzard Entertainment. (1998). *StarCraft* [Video game]. Blizzard Entertainment.
 
