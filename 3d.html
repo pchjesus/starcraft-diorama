@@ -382,6 +382,10 @@ function marine(b,x,z,t,lead,react,watch){
  b.box(0,1.02+breath-crouch,.37,.69,.44,.16,'#324a58','#203442');
  b.box(0,.90+breath-crouch,.47,.52,.19,.065,'#869899','#465a62');
  b.box(0,1.23+breath-crouch,.38,.42,.09,.09,'#bdc5ad','#5b7278');
+ for(const side of [-1,1]){
+   b.box(side*.235,1.085+breath-crouch,.484,.105,.112,.055,'#96a7a7','#405966');
+   b.box(side*.24,1.015+breath-crouch,.518,.065,.044,.021,'#d4ad70','#886743');
+ }
  b.box(0,.704,-.025,.51,.15,.38,'#364b59','#223743');
  for(let side of [-1,1])b.box(side*.25,1.01+breath,.485,.10,.15,.06,'#95a8a8','#49636a');
  // Original CMC identifying shape: big round pauldrons dominate both shoulders.
@@ -403,6 +407,9 @@ function marine(b,x,z,t,lead,react,watch){
  armorWedge(b,0,.135,.045,.72,.56,.34,.68,.49,'#82959c','#435d6b');
  b.box(0,-.065,.344,.57,.205,.09,'#192e3c','#142936');
  b.box(0,-.031,.401,.47,.095,.06,'#c7a66c','#675b46');
+ // The classic CMC amber visor must read at miniature size, not a thin blue slit.
+ b.box(0,.020,.444,.355,.128,.036,'#dfb86a','#8f713f');
+ b.box(-.105,.060,.466,.112,.027,.021,'#eedaa0','#aa894c');
  b.box(0,-.16,.334,.39,.12,.13,'#485f68','#263d48');
  for(const side of [-1,1]){
    b.box(side*.345,-.06,.07,.16,.21,.35,'#4d6776','#2a4654');
@@ -415,12 +422,35 @@ function marine(b,x,z,t,lead,react,watch){
  b.box(0,.865,.575,.98,.20,.25,'#2a373c','#17272d');
  b.box(.285,.886,.72,.55,.13,.23,'#5f665e','#353b39');
  b.box(.61,.9,.753,.36,.105,.143,'#94988b','#495352');
+ b.box(.53,.984,.752,.54,.052,.128,'#718287','#364d53');
+ b.box(.58,.821,.775,.38,.058,.148,'#414f54','#293b43');
  b.box(.84,.90,.766,.20,.16,.19,'#3a4d57','#213640');
  b.box(.948,.90,.767,.075,.075,.12,'#101f27','#24353d');
  b.box(-.465,.843,.545,.31,.27,.22,'#5a655f','#2b373c');
  b.box(-.185,.691,.60,.20,.29,.17,'#4c5c5d','#293d43');
  b.box(.08,.769,.67,.31,.065,.10,'#a2aa9d','#4c5d5c');
  b.pop();b.pop();b.pop();
+}
+// Compact, thick twin tubes: image-derived proportions, NOT lore-scale measurements.
+// Geometry is isolated so the real WebGL2 regression can measure its muzzle reach.
+function arcliteTwinBarrels(b){
+  for(const side of [-1,1]){
+    const x=side*.255;
+    // Thick twin mantlets sit visibly within the turret's sloping front armor.
+    b.box(x,.149,.428,.302,.276,.448,'#657980','#354b57');
+    b.box(x,.260,.497,.268,.066,.301,'#a2aba2','#536a73');
+    b.box(side*.425,.129,.47,.086,.157,.315,'#526a74','#314852');
+    // Barrel: 0.61 long instead of 1.07; thicker tube + clustered retaining bands.
+    b.push(x,.157,.74,0,Math.PI/2);
+    b.cylinder(0,0,0,.146,.61,'#6f868b','#a5ada5',12);
+    b.cylinder(0,-.208,0,.172,.078,'#475c65','#8d9b96',12);
+    b.cylinder(0,.035,0,.160,.058,'#506971','#99a7a1',12);
+    b.cylinder(0,.297,0,.183,.115,'#829693','#b9bbb0',12);
+    // Dark inset muzzle is deliberately smaller than the thick outer rim.
+    b.cylinder(0,.370,0,.117,.030,'#152a32','#263b42',12);
+    b.pop();
+    b.box(x,.034,.635,.222,.080,.183,'#425b66','#2d434e');
+  }
 }
 // v1.0-A / 1998 StarCraft Arclite-inspired, independently authored primitives.
 // Vehicle points towards +Z; turret is the sole part receiving the yaw rotation.
@@ -511,19 +541,8 @@ function tank(b,x,z,t,dist,turn){
     b.box(side*.255,.305,-.39,.21,.13,.19,'#485e66','#2d424d');
     b.box(side*.255,.382,-.39,.13,.045,.12,'#a0aaa0','#5a7074');
   }
-  // Twin 80-mm-style barrels: armored roots, faceted circular tubes, collars, open-looking muzzles.
-  for(const side of [-1,1]){
-    const barrelX=side*.258;
-    b.box(barrelX,.155,.48,.265,.245,.58,'#657b80','#394f59');
-    b.box(barrelX,.232,.53,.26,.079,.35,'#9ba9a3','#5a7278');
-    b.push(barrelX,.156,1.057,0,Math.PI/2);
-    b.cylinder(0,0,0,.104,1.07,'#657d82','#b4bab0',10);
-    b.cylinder(0,.325,0,.126,.17,'#4c626c','#96a39e',10);
-    b.cylinder(0,.542,0,.148,.145,'#879895','#c1c3b2',10);
-    b.cylinder(0,.629,0,.094,.04,'#172d36','#182e38',10);
-    b.pop();
-    b.box(barrelX,.04,.71,.195,.07,.15,'#405963','#2f454e');
-  }
+  // Classic compact twin barrels, kept short of the front glacis (not long modern cannons).
+  arcliteTwinBarrels(b);
   b.pop();b.pop();
 }
 // Shared movement path: the SCV stays OUTSIDE the unfinished bunker.
@@ -547,6 +566,11 @@ function scv(b,t){
    b.box(side*.37,.145,.26,.38,.24,.44,'#324657','#20313d');
    armorWedge(b,side*.36,.19,.43,.37,.28,.18,.39,.26,'#7a8792','#3a515f');
    b.box(side*.385,.12,-.39,.29,.20,.44,'#435b6a','#293f4b');
+  b.push(side*.385,.29,.21,0,0,Math.PI/2);
+  b.cylinder(0,0,0,.124,.112,'#425b6a','#8998a0',10);
+  b.cylinder(0,side*.065,0,.061,.036,'#203642','#617984',10);
+  b.pop();
+  b.box(side*.37,.11,.465,.25,.085,.18,'#a0a49c','#526572');
    b.box(side*.45,.337,-.055,.28,.29,.62,'#485b69','#263b49');
  }
  b.box(0,.412,-.04,.83,.40,.73,'#586974','#2a414f');
@@ -554,9 +578,11 @@ function scv(b,t){
  b.box(0,.85,-.18,.69,.20,.43,'#485e6e','#283f4f');
  // Clearly readable front cockpit, dark glass and low honey-yellow pilot glow.
  armorWedge(b,0,.755,.235,.51,.46,.33,.35,.23,'#344e5c','#263a48');
- b.box(0,.760,.406,.43,.218,.072,'#1d414f','#102d3b');
- b.box(0,.792,.448,.30,.110,.032,'#8bc2b2','#2c6572');
+ b.box(0,.765,.416,.45,.245,.085,'#193748','#0d2433');
+ b.box(0,.797,.464,.322,.100,.033,'#96c9bd','#356e78');
+ b.box(-.11,.829,.488,.095,.025,.018,'#c0e1d2','#668c8b');
  b.box(0,.958,-.075,.35,.055,.28,'#a4acaa','#556b74');
+ b.box(0,1.003,.070,.43,.086,.33,'#5b7280','#384d59');
  b.box(0,.577,.485,.33,.095,.16,'#b7a777','#685e4c');
  for(const side of [-1,1]){
   // Exposed rounded actuators on both sides of the CMC-adjacent utility cockpit.
@@ -566,9 +592,11 @@ function scv(b,t){
   b.pop();
   // Large red tool housing: two independent arms and visible elbow joints.
   b.box(side*.625,.665,.21,.34,.37,.42,'#99434a','#4e2937');
+  b.box(side*.655,.863,.225,.294,.048,.28,'#be615d','#653840');
   b.box(side*.71,.779,.25,.20,.12,.28,'#c26b61','#6b3740');
   b.push(side*.65,.62,.17,side*.12+Math.sin(t*3.2+side)*.17,Math.sin(t*4.1+side)*.06);
   b.cylinder(side*.03,-.075,.195,.147,.20,'#596a72','#95a29e',9);
+  b.box(side*.095,-.051,.115,.082,.075,.152,'#c49d6c','#5d6158');
   b.box(side*.08,-.13,.32,.205,.23,.48,'#697a82','#3e5561');
   b.box(side*.08,-.16,.55,.18,.16,.33,'#a49f82','#59656a');
   b.box(side*.08,-.20,.73,.14,.14,.22,'#3b4f5a','#1f3340');
@@ -582,6 +610,10 @@ function scv(b,t){
   b.box(side*.39,.837,-.44,.12,.11,.16,'#435762','#233b48');
  }
  b.box(0,.63,-.50,.35,.14,.13,'#2e454f','#203842');
+ for(const side of [-1,1]){
+   b.box(side*.29,.690,-.487,.19,.22,.085,'#374d5b','#1d3543');
+   b.box(side*.29,.722,-.543,.13,.052,.035,'#bd9e71','#696454');
+ }
  b.pop();b.pop();
 }
 // Render pipeline: static batches remain on the GPU; only articulated actors rebuild.
