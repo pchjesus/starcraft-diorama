@@ -1,0 +1,37 @@
+name: StarCraft v1.0-E WebGL2 visual gate
+on:
+  push:
+    branches:
+      - v1.0-a-arclite-tank
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: starcraft-visual-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright and PNG decoder
+        run: npm install --no-save --no-package-lock playwright@1.56.1 pngjs@7.0.0
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Validate scene through real WebGL2 and capture 15 frames
+        run: node tests/webgl-v1-e.mjs
+      - name: Upload screenshots and JSON report (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: starcraft-v1-0-e-render-check
+          path: test-results/v1-e/
+          if-no-files-found: warn
+          retention-days: 14
