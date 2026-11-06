@@ -252,8 +252,8 @@ function marine(b,x,z,t,lead,react,watch){
 function tank(b,x,z,t,dist,turn){
   b.push(x,.13,z);
   const iron='#32434c',treadEdge='#52656b';
-  // Four visibly separate track modules (front and rear, left and right), not a single metal box.
-  // Total footprint remains within the former tank envelope for the Factory-door gag.
+  // Twin continuous tread silhouettes with detailed front/rear bogie armor.
+  // Keep the overall footprint compatible with the existing factory exit.
   for(const side of [-1,1]){
     for(const end of [-1,1]){
       const podZ=end*.51;
@@ -276,6 +276,14 @@ function tank(b,x,z,t,dist,turn){
       b.box(side*.975,.66,podZ,.045,.13,.79,'#576c72','#354951');
       for(let k of [-1,1])b.box(side*.76,.553,podZ+k*.40,.51,.045,.07,'#a0a9a0','#516770');
     }
+    // Continuous belt bridges the armored front/rear bogies, as in the original sprite.
+    b.box(side*.77,.735,0,.60,.055,1.96,'#738688','#405761');
+    b.box(side*.77,.104,0,.60,.055,1.96,'#465c62','#2a424b');
+    b.box(side*1.095,.518,0,.075,.16,1.94,'#455860','#283d47');
+    for(let j=0;j<11;j++){
+      const shoe=-.90+j*.18+((dist*.16)% .18);
+      b.box(side*.77,.790,shoe,.61,.057,.080,j%2?'#9ea99e':'#899c99','#52686d');
+    }
     // External front fender, aft exhausts and bolt heads break up the silhouette.
     armorWedge(b,side*.69,.68,1.019,.67,.52,.24,.36,.27,'#728689','#405661');
     b.box(side*.70,.44,1.113,.61,.15,.13,'#9da49c','#51646a');
@@ -288,6 +296,10 @@ function tank(b,x,z,t,dist,turn){
   armorWedge(b,0,.716,.80,1.41,1.20,.20,.61,.39,'#99a69d','#546a72');
   b.box(0,.447,1.067,1.30,.16,.20,'#62767a','#354950');
   b.box(0,.382,1.165,.91,.12,.08,'#3b515b','#253942');
+  // Golden inset front-deck intake: readable reference landmark on Arclite's glacis.
+  b.box(0,.919,.745,.51,.045,.39,'#334750','#71827d');
+  b.box(0,.945,.745,.42,.036,.31,'#b4a361','#696541');
+  for(let j=-2;j<=2;j++)b.box(j*.079,.968,.745,.037,.025,.265,'#36494a','#536769');
   for(const side of [-1,1]){
     // Split armor cheeks, amber marker lights and hull fasteners.
     b.box(side*.61,.765,.43,.27,.13,1.00,'#6c8484','#455a63');
@@ -319,6 +331,11 @@ function tank(b,x,z,t,dist,turn){
   b.box(-.23,.416,-.27,.19,.035,.08,'#344b55','#536c72');
   b.box(.205,.352,-.285,.23,.065,.17,'#394c55','#253a43');
   b.box(0,.207,.375,.62,.055,.07,'#9aaca5','#516870');
+  // Two compact rear turret service housings, not a tall modern-style cupola.
+  for(const side of [-1,1]){
+    b.box(side*.255,.305,-.39,.21,.13,.19,'#485e66','#2d424d');
+    b.box(side*.255,.382,-.39,.13,.045,.12,'#a0aaa0','#5a7074');
+  }
   // Twin 80-mm-style barrels: armored roots, faceted circular tubes, collars, open-looking muzzles.
   for(const side of [-1,1]){
     const barrelX=side*.258;
