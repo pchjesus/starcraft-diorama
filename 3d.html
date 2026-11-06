@@ -123,7 +123,14 @@ function clippedArmor(b,x,y,z,w,h,d,cut,inset,top,side){
  const ring=(halfW,halfD,c,Y)=>[[-halfW+c,Y,-halfD],[halfW-c,Y,-halfD],[halfW,Y,-halfD+c],[halfW,Y,halfD-c],[halfW-c,Y,halfD],[-halfW+c,Y,halfD],[-halfW,Y,halfD-c],[-halfW,Y,-halfD+c]];
  const lower=ring(w/2,d/2,cut,y-h/2),upper=ring(w/2-inset,d/2-inset,Math.max(.01,cut-inset*.4),y+h/2);
  b.push(x,0,z);
- for(let i=0;i<8;i++){const j=(i+1)%8;b.quad(lower[i],lower[j],upper[j],upper[i],side);b.triangle([0,y+h/2,0],upper[j],upper[i],top);}
+ // Face winding: lower -> upper -> next upper points OUTWARD on each side;
+ // the upper cap points +Y, and the lower cap points -Y.
+ for(let i=0;i<8;i++){
+  const j=(i+1)%8;
+  b.quad(lower[i],upper[i],upper[j],lower[j],side);
+  b.triangle([0,y+h/2,0],upper[j],upper[i],top);
+  b.triangle([0,y-h/2,0],lower[i],lower[j],side);
+ }
  b.pop();
 }
 function axialWheel(b,x,y,z,r,color='#536369'){
