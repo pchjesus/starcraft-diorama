@@ -37,6 +37,19 @@
 - 실제 Chrome/Chromium WebGL2, 13개 PC 타임라인 화면 + 2개 모바일 화면, PC 클릭/모바일 터치, 확대 유닛 이미지 3개.
 - 마지막 검증 PASS 및 화면 검토 이전에는 main 병합하지 않음.
 
+## 최종 실렌더링 검증과 병합
+
+- 유닛 비례 수정 PR: https://github.com/pchjesus/starcraft-diorama/pull/7
+- 병합된 `main`: `346aeabf445af21189356ce8d27c89dac74f3ac2`
+- 실제 Chromium WebGL2 검증: https://github.com/pchjesus/starcraft-diorama/actions/runs/42200275825 — **PASS**
+- 데스크톱 13시점(출고·반응·회전·후진 포함) + 모바일 가로·세로 2시점 = 15개 스크린샷, 추가 유닛 확대 3장.
+- 기존 재생·일시정지 클릭, 모바일 터치 2종, SCV 18초 작업 루프, 포신 길이·메시 유효 좌표 및 7개 유닛·건물 비례: **PASS**.
+- 추가한 출고문 세 지점 여유 검사, 포탑 독립 회전 검증도 **PASS**.
+- 리포트 측정: SCV/마린 높이 **1.423**, 폭 **1.372**, 탱크/마린 폭 **1.924**; 문짝 **0.0552**, 내부 기둥 **0.0652**, 외부 지지부 **0.0202** 장면 단위 여유.
+- 같은 카메라와 배경 구도에서 v1.2와 v1.3의 14.8초/18초 화면을 육안 비교함.
+- 공개 Pages URL: https://pchjesus.github.io/starcraft-diorama/3d.html
+- 공개 Pages와 `main` 파일의 SHA-256 일치 여부는 별도 live Pages 체크로 검증하고 결과를 최종 보고할 것.
+
 ## 참고문헌 (APA 7th)
 Blizzard Entertainment. (1998). *StarCraft* [Video game]. Blizzard Entertainment.
 
