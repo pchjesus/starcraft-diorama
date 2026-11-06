@@ -123,65 +123,182 @@ function rivets(b,x,z,y,dir=0,ct=5){for(let i=0;i<ct;i++){let a=-.45+(i/(ct-1))*
 function fan(b,x,y,z,r,t){b.cylinder(x,y-.04,z,r*1.28,.14,'#3d5860','#9cadad',12);b.cylinder(x,y+.025,z,r,.07,'#213640','#314b4c',12);
  b.push(x,y+.08,z,t*1.62);for(let j=0;j<4;j++){b.push(0,0,0,j*Math.PI/2);b.box(0,.045,r*.40,r*.48,.08,r*.82,'#889899','#6b898c');b.pop();}b.cylinder(0,.13,0,r*.16,.2,'#52666b','#bbbcad',8);b.pop()}
 const props={};
-function factory(b){const x=.55,z=-2.95;b.push(x,0,z);
- // Brood War-inspired squat rectangular hull, roof ridge and plated industrial ribs.
- b.box(0,1.2,0,3.85,2.14,2.92,'#72838a','#42565e','#33424a');
- b.box(0,2.37,-.54,3.30,.43,1.55,'#627783','#455a62');
- b.box(0,2.64,-.83,2.60,.15,.92,'#99a7a4','#536770');
- armorWedge(b,0,2.66,.37,3.48,3.04,.45,1.22,.86,'#788a8a','#4c626a');
- // Massive gabled blast door frame: the animated shutters remain separately controlled.
- b.box(0,1.13,1.55,2.22,1.84,.13,'#273943','#2e4048');
- b.box(0,1.08,1.64,1.66,1.36,.05,'#1b2d35','#19282f');
- b.box(0,.37,1.75,2.42,.22,.32,'#66767b','#34434b');
+// v1.0-D: squat Brood War factory, twin slanted intake roofs and rear service chimney.
+// Origin, outer footprint and shutter frame stay identical to the v0.7 scene.
+function factory(b){b.push(.55,0,-2.95);
+ const hull='#657980',seam='#344750',bright='#a4ada9';
+ b.box(0,1.20,0,3.85,2.14,2.92,'#697981','#40545e','#303f49');
+ // Wide load-bearing feet and lower hull sections.
+ for(const s of [-1,1]){
+  b.box(s*1.43,.255,1.01,.56,.36,.71,'#425760','#273944');
+  b.box(s*1.43,.11,1.22,.49,.14,.71,'#a1a9a2','#566b70');
+  b.box(s*1.52,.38,-.90,.60,.50,.80,'#687c80','#40545d');
+  b.box(s*1.81,1.17,-.12,.17,1.53,2.00,'#71858b','#475b62');
+  b.box(s*1.77,1.75,.35,.19,.14,.74,'#a6b3aa','#657980');
+ }
+ // Main recessed and stepped double-pitched-looking roof deck.
+ b.box(0,2.37,-.54,3.30,.43,1.55,'#596d75','#344b56');
+ b.box(0,2.65,-.82,2.80,.14,1.00,'#8d9996','#526871');
+ armorWedge(b,0,2.64,.31,3.52,3.05,.40,1.29,.97,'#788a8a','#475e66');
+ // Original sprite's two conspicuous sloping vent covers; black rectangular recesses.
+ for(const s of [-1,1]){
+  armorWedge(b,s*.87,2.88,.56,1.35,1.06,.42,.94,.64,'#818f91','#4a5c64');
+  b.box(s*.87,3.109,.585,.91,.045,.48,'#293c45','#1a303a');
+  b.box(s*.87,3.137,.58,.70,.030,.33,'#182d36','#101f2b');
+  for(let j=0;j<4;j++)b.box(s*.87,3.160,.44+j*.089,.66,.028,.038,'#455a61','#283c46');
+  b.box(s*.87,3.17,.82,.92,.07,.09,'#c1bbb1','#6c7f80');
+ }
+ // Rear industrial maintenance stripe, high exhaust stack and ventilator cluster.
+ b.box(0,2.76,-1.12,2.46,.14,.25,'#a7aea6','#536a70');
+ for(let i=0;i<4;i++)b.cylinder(-1.24+i*.22,2.98,-1.08,.092,.31,'#364c56','#657a7f',8);
+ b.box(1.05,2.80,-.95,.67,.38,.56,'#374d59','#253b48');
  for(let s of [-1,1]){
-  b.box(s*1.14,1.14,1.62,.29,1.98,.34,'#93a4a2','#53676e');
-  b.box(s*1.43,1.30,1.20,.36,1.67,.31,'#6e8286','#42545c');
-  b.box(s*1.80,.49,1.08,.30,.35,.72,'#697e82','#43535c');
-  b.box(s*1.14,1.65,1.84,.13,.20,.11,'#eeb56c','#af7644');
-  for(let j=0;j<6;j++)b.box(s*1.15,.44+j*.29,1.82,.065,.075,.07,'#b2bab1','#71817d');
-  b.box(s*.84,2.76,-.58,.34,.14,1.48,'#9aa8a5','#55676d');
+  b.cylinder(s*.90,3.13,-.99,.23,.95,'#52646a','#8b9c9a',10);
+  b.cylinder(s*.90,3.60,-.99,.30,.11,'#697a80','#a8b5af',10);
+  b.cylinder(s*.90,3.69,-.99,.145,.085,'#1b3038','#405760',10);
+ }
+ // Factory door remains at EXACT previous position; dynamic shutters unmodified.
+ b.box(0,1.13,1.55,2.22,1.84,.13,'#243742','#20323c');
+ b.box(0,1.08,1.64,1.66,1.36,.05,'#142832','#152730');
+ b.box(0,.37,1.75,2.42,.22,.32,'#6c787a','#37464f');
+ for(const s of [-1,1]){
+  b.box(s*1.14,1.14,1.62,.29,1.98,.34,'#a0a9a2','#56696f');
+  b.box(s*1.43,1.30,1.20,.36,1.67,.31,'#7b8a8b','#435761');
+  b.box(s*1.80,.49,1.08,.30,.35,.72,'#62757b','#394f5a');
+  b.box(s*1.14,1.65,1.84,.13,.20,.11,'#e4b16b','#9c6a3e');
+  for(let j=0;j<6;j++)b.box(s*1.15,.44+j*.29,1.82,.065,.075,.07,'#b8b9ac','#718580');
+  b.box(s*1.45,1.84,1.25,.08,.11,.37,'#253b45','#1b303a');
  }
  warningMark(b,0,.43,1.89,1.30);
- for(let j=0;j<5;j++)b.box(-1.65+j*.75,2.58,-.96,.07,.09,1.22,'#a2b2b0','#55656e');
- for(let i=0;i<3;i++){b.box(1.96,.89+i*.46,-.69,.07,.12,.32,'#5ad99a','#245953');b.box(1.95,.78+i*.46,-.88,.09,.08,.08,'#a8d0ab','#54736e');}
- // Two broad capped exhaust stacks and clamp bolts on wall.
- for(let s of [-1,1]){b.cylinder(s*.9,3.13,-.99,.23,.95,'#53656b','#92a6a0',10);b.cylinder(s*.9,3.60,-.99,.30,.11,'#637980','#a6b5ae',10);}
- for(let j=0;j<8;j++)b.box(-1.71+j*.46,.98,-1.51,.10,.34,.08,j%2?'#4e646d':'#6a8185','#455963');
+ // Distinct side hatch, red warning lamps and a horizontal cooling grille.
+ b.box(1.94,1.32,-.56,.09,1.00,.94,'#314a54','#21353e');
+ for(let j=0;j<5;j++)b.box(2.005,.99+j*.155,-.57,.060,.045,.70,'#71848a','#354951');
+ for(let i=0;i<3;i++){b.box(1.98,.95+i*.38,-.99,.065,.11,.14,'#d6a35d','#594a3a')}
+ for(let j=0;j<8;j++)b.box(-1.71+j*.46,.98,-1.51,.10,.34,.08,j%2?'#485d65':'#73868a','#425760');
  b.box(-1.51,2.52,-.33,.48,.50,.66,'#526770','#3e545b');
  b.box(1.35,.30,1.26,.28,.23,.56,'#bcb37d','#746c49');
- b.pop()}
+ b.pop();
+}
+// Armory's round open machinery + red conduits + tall service towers (not a solid shed).
 function armory(b){b.push(-3.52,0,-3.42);
- b.box(0,1.18,0,2.5,2.08,1.91,'#758785','#475b61');
- armorWedge(b,0,2.34,-.22,2.25,1.92,.47,1.65,1.35,'#89938f','#56696b');
- b.box(-.34,2.76,-.35,1.6,.83,1.2,'#788684','#4d6266');
- for(let x of [-.65,.65]){b.cylinder(x,3.47,-.37,.23,1.27,'#4d6068','#9ba9a6',10);b.cylinder(x,4.12,-.37,.33,.15,'#63737b','#a4b2ab',10);}
- for(let s of [-1,1]){b.box(s*1.12,1.17,.15,.33,1.64,1.38,'#667c7b','#3b5057');b.box(s*1.23,.43,.25,.20,.27,.8,'#9baca2','#536866');}
- for(let j=0;j<4;j++)b.box(-.7+j*.46,1.06,.988,.30,.65,.12,j===1?'#edac55':'#aa6c3c','#6b4934');
- for(let j=0;j<5;j++)b.box(-.97+j*.49,.36,1.023,.14,.15,.09,j%2?'#d4b476':'#34494c','#516267');
- for(let j=0;j<4;j++)b.box(1.27,.58+j*.37,-.22,.09,.08,1.33,j%2?'#b59562':'#8b9c94','#566b70');
- b.pop()}
+ // Existing footprint is retained; center machine is visible within the frame.
+ b.box(0,.36,0,2.50,.51,1.91,'#50616a','#303e49');
+ armorWedge(b,0,.66,0,2.37,2.17,.28,1.79,1.59,'#657780','#344d57');
+ for(let s of [-1,1]){
+  b.box(s*1.06,.64,0,.35,.78,1.42,'#657983','#354b55');
+  b.box(s*1.16,.22,.14,.27,.28,.65,'#95a19b','#516a72');
+  b.box(s*.74,.93,.72,.53,.45,.28,'#6d8189','#364c55');
+  b.box(s*.74,1.14,.73,.42,.07,.31,'#9da9a4','#5c7275');
+ }
+ // Central raised cylindrical foundry, inset green illumination.
+ b.cylinder(0,1.26,-.08,.86,.87,'#4a5d66','#83918a',14);
+ b.cylinder(0,1.75,-.08,.77,.16,'#a18858','#c1a768',14);
+ b.cylinder(0,1.84,-.08,.65,.09,'#183b38','#397d62',14);
+ b.cylinder(0,1.91,-.08,.50,.065,'#2a5348','#54af77',14);
+ b.cylinder(0,2.04,-.08,.38,.17,'#824a3c','#b46a54',12);
+ // Gold/bronze ring teeth supply the recognizable open circular silhouette.
+ for(let j=0;j<14;j++){
+  const a=j*Math.PI*2/14;
+  b.push(Math.cos(a)*.73,1.94,Math.sin(a)*.73-.08,a);
+  b.box(0,0,0,.16,.32,.18,j%2?'#b29b58':'#d1ac67','#65583b');
+  b.pop();
+ }
+ // Pipes arch toward the rear towers, red conduits on both flanks.
+ for(const s of [-1,1]){
+  b.box(s*.99,1.42,-.51,.17,.29,1.01,'#853c3e','#4a343c');
+  b.box(s*.93,1.65,-.47,.19,.14,.85,'#b35752','#714040');
+  b.cylinder(s*.88,2.00,-.71,.25,2.62,'#495b63','#87948e',9);
+  b.cylinder(s*.88,3.37,-.71,.31,.12,'#63747c','#9ca9a1',9);
+  b.cylinder(s*.88,3.53,-.71,.17,.30,'#344b53','#6b7f7e',9);
+  b.box(s*.90,3.82,-.71,.20,.18,.20,'#a9a9a0','#607578');
+ }
+ // Rear chimney remains at the established smoke emitter, (-4.21,4.25,-3.69).
+ b.cylinder(-.69,3.31,-.27,.22,1.72,'#465b65','#87958e',9);
+ b.cylinder(-.69,4.14,-.27,.31,.12,'#50656b','#a2ada2',9);
+ b.cylinder(-.69,4.23,-.27,.14,.07,'#1c3038','#455b60',9);
+ // Front diagnostic pylons: tiny green indicators, not oversized neon walls.
+ for(const s of [-1,1]){
+  b.cylinder(s*1.03,1.19,.82,.15,.96,'#566b73','#9ca9a2',9);
+  b.cylinder(s*1.03,1.70,.82,.21,.11,'#3c555b','#9ba9a1',9);
+  b.box(s*1.03,1.46,1.00,.12,.19,.055,'#73d69c','#345d55');
+ }
+ // Preserve elevated rotating fan at its pre-existing fixed world coordinates.
+ b.box(-.28,2.91,-.20,.85,.12,.74,'#53676d','#334b55');
+ b.pop();
+}
+// Supply Depot: low sprawling logistics dock, twin face fans, green bay and red cartridges.
 function supply(b){b.push(-3.48,0,-.87);
- b.box(0,.36,0,2.19,.54,2.19,'#596d75','#3d545e');
- for(let s of [-1,1]){b.box(s*.88,.36,.04,.38,.48,1.64,'#7d9495','#465f66');b.box(.01,.31,s*.88,1.58,.30,.36,'#70868b','#40565d');}
- b.cylinder(0,.87,0,.87,.63,'#617781','#899b9d',12);
- // Original StarCraft depot's recognizable low octagonal stepped roof.
- b.cylinder(0,1.22,0,1.04,.25,'#687d87','#9aaba7',12);
- b.cylinder(0,1.39,0,.84,.11,'#536871','#95a7a6',12);
- b.cylinder(0,1.53,0,.45,.09,'#455d64','#9eaaa8',10);
- for(let j=0;j<8;j++){let a=j*Math.PI/4;b.box(Math.cos(a)*.82,1.44,Math.sin(a)*.82,.21,.08,.22,'#a1b0ab','#51676c');}
- for(let j=0;j<6;j++)b.box(-.75+j*.30,.44,1.09,.09,.25,.09,j%2?'#c4a36b':'#34464b','#52514d');
- b.pop()}
+ b.box(0,.35,0,2.19,.50,2.19,'#536772','#354d58');
+ for(const s of [-1,1]){
+  b.box(s*.91,.32,-.01,.38,.46,1.74,'#72858b','#405861');
+  b.box(.01,.29,s*.90,1.66,.31,.35,'#71848b','#40545e');
+  b.box(s*.88,.20,.82,.30,.28,.34,'#a1a8a0','#516871');
+ }
+ // Low angled roof pieces and darker back cradle.
+ armorWedge(b,0,.80,-.18,2.04,1.66,.44,1.68,1.21,'#6b7d83','#435863');
+ b.box(0,.90,-.70,1.58,.20,.66,'#455b64','#293f4d');
+ // Circular top vent deliberately leaves room for existing animated fan y=1.74.
+ b.cylinder(0,1.14,-.05,.83,.42,'#526a73','#8d9d98',12);
+ b.cylinder(0,1.39,-.05,.90,.15,'#455b65','#a6aca1',12);
+ b.cylinder(0,1.50,-.05,.77,.065,'#18333e','#293e47',12);
+ // Front left red storage cells; low open green-loading dock underneath.
+ b.box(-.49,.59,.87,1.02,.69,.25,'#263d45','#22363f');
+ b.box(-.49,.47,1.051,.88,.21,.05,'#276e51','#174739');
+ for(let j=0;j<3;j++){
+  const xx=-.82+j*.33;
+  b.box(xx,.94,.805,.29,.36,.30,'#994245','#542c37');
+  b.box(xx,1.12,.81,.24,.075,.29,'#cc5955','#7e383b');
+  b.box(xx,.82,.982,.24,.07,.06,'#5b3136','#2e2931');
+ }
+ // Front/right twin axial ventilation fans: discs face forward in +Z.
+ for(const xx of [.25,.77]){
+  b.push(xx,.94,.920,0,Math.PI/2);
+  b.cylinder(0,0,0,.33,.15,'#384d57','#899b9e',12);
+  b.cylinder(0,.09,0,.252,.045,'#1b303b','#405660',12);
+  for(let j=0;j<4;j++){
+   b.push(0,.125,0,j*Math.PI/2);
+   b.box(0,.021,.13,.10,.052,.23,'#93a19e','#617579');
+   b.pop();
+  }
+  b.cylinder(0,.17,0,.085,.055,'#63767a','#b0b7ac',10);
+  b.pop();
+ }
+ // The original's caution-striped front bumper and side utility tubes.
+ b.box(-.56,.21,1.22,1.14,.11,.15,'#b2aaa0','#566c70');
+ for(let j=0;j<7;j++)b.box(-1.04+j*.15,.28,1.311,.075,.14,.042,j%2?'#b8a05e':'#273c43','#46545c');
+ b.box(.93,.30,.95,.30,.24,.36,'#485d65','#354956');
+ b.box(1.02,.43,.60,.15,.18,.22,'#67d891','#356755');
+ b.cylinder(.90,.50,-.80,.15,.39,'#4f6469','#899590',9);
+ b.cylinder(.90,.72,-.80,.21,.07,'#9b9a8e','#526a70',9);
+ b.pop();
+}
+// Factory's right-hand add-on: clearly smaller, physically joined by a service coupler.
 function machineShop(b){b.push(3.43,0,-2.94);
- b.box(0,.88,0,1.98,1.55,2.01,'#83959a','#4d636c');
- b.box(0,1.82,-.22,1.72,.43,1.50,'#657d87','#465c66');
- armorWedge(b,0,2.13,-.25,1.78,1.50,.39,1.55,1.12,'#839698','#51656b');
- b.box(0,1.15,1.04,1.16,.88,.14,'#23564d','#285c57');
- b.box(0,1.14,1.12,.92,.54,.05,'#43af83','#2b705d');
- for(let j=0;j<5;j++)b.box(-.44+j*.22,.68,1.155,.10,.09,.09,j%2?'#d7c17f':'#70e8a8','#526c60');
- for(let s of [-1,1]){b.box(s*.91,1.11,.26,.24,1.51,1.23,'#798d8f','#4b6068');for(let j=0;j<4;j++)b.box(s*1.02,.54+j*.35,-.54,.10,.08,.26,'#95aaa5','#4d6971');}
- // Attached joint and machine-shop coolant pipe entering the factory.
- b.push(-1.07,.82,-.4);b.box(0,0,0,.44,.36,1.31,'#52676d','#334851');b.pop();
- b.pop()}
+ b.box(0,.80,0,1.96,1.39,1.99,'#72878a','#405660','#314650');
+ armorWedge(b,0,1.69,-.24,1.87,1.60,.45,1.84,1.49,'#768d91','#475d65');
+ // Low raised machinery housing sits behind the visible spinning roof fan.
+ b.box(0,2.02,-.46,1.67,.23,1.13,'#536d74','#364c57');
+ b.box(0,2.20,-.76,1.30,.17,.53,'#9aaba6','#4c616c');
+ for(let s of [-1,1]){
+  b.box(s*.87,1.08,.16,.24,1.46,1.37,'#86979a','#4a6068');
+  b.box(s*.91,.22,.72,.29,.25,.43,'#51676d','#344955');
+  for(let j=0;j<4;j++)b.box(s*1.015,.53+j*.34,-.54,.085,.065,.24,'#9faea5','#536b72');
+ }
+ // Vent ring under the already animated roof fan at local (-.04,2.36,-.15).
+ b.cylinder(-.04,2.09,-.15,.70,.13,'#425960','#7e9794',12);
+ b.cylinder(-.04,2.17,-.15,.60,.035,'#1c333e','#233f4b',12);
+ // Small control console glows green rather than a giant neon billboard.
+ b.box(0,1.13,1.042,1.13,.86,.15,'#244540','#253e41');
+ b.box(0,1.15,1.133,.87,.49,.06,'#4d9a77','#286051');
+ for(let j=0;j<5;j++)b.box(-.38+j*.19,.75,1.167,.082,.082,.055,j%2?'#d2b16b':'#a9d6b0','#4e6b62');
+ for(let j=0;j<3;j++)b.box(-.68+j*.66,1.60,1.06,.24,.10,.13,'#a2aca8','#57686d');
+ // Factory right wall -> left machine-shop fitting, pipe and conduit.
+ b.box(-1.13,.88,-.38,.43,.40,1.31,'#50656c','#334850');
+ b.cylinder(-1.12,1.13,-.47,.17,.39,'#3b525d','#839694',10);
+ b.box(-1.14,1.35,-.40,.38,.10,.91,'#a1aba2','#607478');
+ for(let j=0;j<4;j++)b.box(-.68+j*.39,.29,-.91,.24,.12,.17,j%2?'#bb985d':'#455861','#52646c');
+ b.pop();
+}
 function bunker(b){b.push(3.91,0,2.18);b.box(0,.15,0,1.83,.16,1.66,'#566e70','#36454a');
  for(let x of [-.83,.83])for(let z of [-.72,.72]){b.box(x,.57,z,.14,1.05,.14,'#849b9a','#607982');b.box(x,1.1,z,.22,.14,.22,'#b4bdb2','#6e8583')}
  for(let z of [-.7,.7])b.box(0,.86,z,1.8,.12,.13,'#8da6a6','#607d7e');
