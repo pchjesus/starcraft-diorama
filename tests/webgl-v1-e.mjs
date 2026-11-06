@@ -102,6 +102,20 @@ async function check(phase,width,height,mobile=false){
         'SCV must visit three different sites');
       assert.equal(loop.x,a.x);assert.equal(loop.z,a.z);
       report.workerClearance=workerSites;
+      const cannon=await page.evaluate(()=>{
+        const m=new Mesh(); arcliteTwinBarrels(m);
+        let zMin=Infinity,zMax=-Infinity,finite=true;
+        for(let i=0;i<m.data.length;i+=9){
+          zMin=Math.min(zMin,m.data[i+2]);zMax=Math.max(zMax,m.data[i+2]);
+          if(!m.data.slice(i,i+9).every(Number.isFinite))finite=false;
+        }
+        return {zMin,zMax,depth:zMax-zMin,vertices:m.data.length/9,finite,stack:m.stack.length};
+      });
+      assert.ok(cannon.finite && cannon.stack===1 && cannon.vertices>500,'short cannon geometry invalid');
+      assert.ok(cannon.depth>=.76 && cannon.depth<=.98,'cannon looks too long/short: '+cannon.depth);
+      assert.ok(cannon.zMax<=1.16,'muzzle sticks out too far: '+cannon.zMax);
+      assert.ok(cannon.zMax-.14<1.205,'muzzle exceeds the front of tank hull');
+      report.arcliteTwinBarrels=cannon;
     }
     // A real screen-space check: the highest old Armory chimney must remain inside
     // both desktop and landscape-phone viewports (prior version cropped it).
@@ -116,6 +130,25 @@ async function check(phase,width,height,mobile=false){
     }
     assert.ok(colors.size>=30 && lit/total>.03,label+': black or blank canvas');
     report.checks.push({label,phase,version:state.version,colors:colors.size,litFraction:+(lit/total).toFixed(3),bytes:pngBuffer.length,armoryRoofY:+topLandmarkY.toFixed(1)});
+    // Ship small targeted crops alongside full screenshots for human comparison
+    // against user-supplied original StarCraft unit renders; no image assets copied.
+    if(phase===18 && width===1280 && !mobile){
+      const targets=await page.evaluate(()=>{
+        const w=scvWorkPose(18);
+        return {
+          tank:project3(.55,1.0,1.08),
+          marine:project3(-1.52,1.1,2.18),
+          scv:project3(w.x,1.05,w.z)
+        };
+      });
+      for(const [unit,[cx,cy]] of Object.entries(targets)){
+        const cropWidth=230,cropHeight=190;
+        const x=Math.max(0,Math.min(width-cropWidth,Math.round(cx-cropWidth/2)));
+        const y=Math.max(0,Math.min(height-cropHeight,Math.round(cy-cropHeight/2)));
+        await page.screenshot({path:join(folder,'closeup-'+unit+'-18.png'),
+          clip:{x,y,width:cropWidth,height:cropHeight}});
+      }
+    }
     if(phase===18 && width===1280){
       const getProgress=()=>page.locator('#progress').evaluate(el=>parseFloat(el.style.width));
       const before=await getProgress();
