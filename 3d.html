@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071318">
-<title>Factory After Hours · Brood War 3D Pass v1.0-D</title>
+<title>Factory After Hours · 3D Visual &amp; Scale Pass v1.1</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071318;color:#ecf2eb}
@@ -28,7 +28,7 @@
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
 <div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><button id="assetBtn" type="button" title="로컬 스타1 그래픽팩 불러오기">로컬 그래픽팩</button><button id="spriteToggle" type="button" title="스프라이트 레이어 전환">그래픽: 3D</button><input id="assetInput" type="file" accept="image/*,.json" multiple webkitdirectory directory><div><div class="eyebrow">SCENE 01 / BROOD WAR MODEL PASS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div><span id="assetMode">LOCAL SPRITE MODE · OFF</span></div></div>
-<div id="badge">V1.0-D · TERRAN BUILDING PASS · NO AUDIO</div><div id="progress"></div>
+<div id="badge">V1.1 · VISUAL PROPORTIONS · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
@@ -180,7 +180,7 @@ function factory(b){b.push(.55,0,-2.95);
  b.pop();
 }
 // Armory's round open machinery + red conduits + tall service towers (not a solid shed).
-function armory(b){b.push(-3.52,0,-3.42);
+function armory(b){b.push(-3.52,0,-3.42);b.stack.push(M.mul(b.matrix,M.S(1.25,.73,1.08)));
  // Existing footprint is retained; center machine is visible within the frame.
  b.box(0,.36,0,2.50,.51,1.91,'#50616a','#303e49');
  armorWedge(b,0,.66,0,2.37,2.17,.28,1.79,1.59,'#657780','#344d57');
@@ -222,12 +222,12 @@ function armory(b){b.push(-3.52,0,-3.42);
   b.cylinder(s*1.03,1.70,.82,.21,.11,'#3c555b','#9ba9a1',9);
   b.box(s*1.03,1.46,1.00,.12,.19,.055,'#73d69c','#345d55');
  }
- // Preserve elevated rotating fan at its pre-existing fixed world coordinates.
+ // Scaled fan seat retains original location relative to the armory tower.
  b.box(-.28,2.91,-.20,.85,.12,.74,'#53676d','#334b55');
- b.pop();
+ b.pop();b.pop();
 }
 // Supply Depot: low sprawling logistics dock, twin face fans, green bay and red cartridges.
-function supply(b){b.push(-3.48,0,-.87);
+function supply(b){b.push(-3.48,0,-.87);b.stack.push(M.mul(b.matrix,M.S(1.20,1.20,1.10)));
  b.box(0,.35,0,2.19,.50,2.19,'#536772','#354d58');
  for(const s of [-1,1]){
   b.box(s*.91,.32,-.01,.38,.46,1.74,'#72858b','#405861');
@@ -270,7 +270,7 @@ function supply(b){b.push(-3.48,0,-.87);
  b.box(1.02,.43,.60,.15,.18,.22,'#67d891','#356755');
  b.cylinder(.90,.50,-.80,.15,.39,'#4f6469','#899590',9);
  b.cylinder(.90,.72,-.80,.21,.07,'#9b9a8e','#526a70',9);
- b.pop();
+ b.pop();b.pop();
 }
 // Factory's right-hand add-on: clearly smaller, physically joined by a service coupler.
 function machineShop(b){b.push(3.43,0,-2.94);
@@ -309,7 +309,7 @@ function factoryStatic(b){factory(b);machineShop(b);armory(b);supply(b);bunker(b
  // Static industrial exterior fixtures, bolt pattern and side pipes.
  for(let i=0;i<8;i++)b.box(-1.03+i*.22,.17,-1.28,.1,.025,.15,i%2?'#c8a263':'#384a49','#43534c');
 }
-function animatedFans(b,t){fan(b,-.19,2.79,-3.37,.53,t);fan(b,3.39,2.36,-3.09,.58,t*.95);fan(b,-3.48,1.74,-.87,.41,t*.75);fan(b,-3.8,3.15,-3.62,.30,t*.85)}
+function animatedFans(b,t){fan(b,-.19,2.79,-3.37,.53,t);fan(b,3.39,2.36,-3.09,.58,t*.95);fan(b,-3.48,2.03,-.87,.43,t*.75);fan(b,-3.87,2.34,-3.64,.30,t*.85)}
 // Telescoping four-panel blast door clears the broad Arclite tracks without widening the factory hull.
 // 6.2–7.7 opening precedes the 8.0-second tank motion; closing starts after the tank vanishes.
 function factoryShutter(b,phase){
@@ -335,7 +335,7 @@ function marine(b,x,z,t,lead,react,watch){
  const breath=Math.sin(t*.72+(lead?0:1.4))*.020;
  const crouch=react*.075, lean=-react*.09;
  b.push(tx,.16,tz,lead?-.13:0,lean);
- b.stack.push(M.mul(b.matrix,M.S(.81,.81,.81)));
+ b.stack.push(M.mul(b.matrix,M.S(.73,.73,.73)));
  // Wide metal sabatons, separate armored shin + kneecap, short thighs.
  for(const side of [-1,1]){
   const step=side<0&&lead?react*.17:0;
@@ -508,8 +508,8 @@ function scv(b,t){
  const move=S(4.1,5.5,p),x=lerp(spots[k][0],spots[(k+1)%3][0],move),z=lerp(spots[k][1],spots[(k+1)%3][1],move);
  const bob=Math.sin(t*2.6)*.023,weld=(phase%6)<3.9;
  b.push(x,.18+bob,z,-.55+(k-1)*.23);
- // Game sprite-based height: 1.4–1.6x marine; width restrained for bunker clearance.
- b.stack.push(M.mul(b.matrix,M.S(1.34,2.18,1.36)));
+ // StarCraft 1 gameplay footprint guidance: SCV wider than a marine, smaller than a tank; scene-height goal ~1.4-1.6x marine.
+ b.stack.push(M.mul(b.matrix,M.S(.72,1.95,.82)));
  // Dual pointed stabilizer feet / chassis below the blue-grey utility body.
  for(const side of [-1,1]){
    b.box(side*.37,.145,.26,.38,.24,.44,'#324657','#20313d');
@@ -654,7 +654,7 @@ const bugs=Array.from({length:42},()=>({x:rnd(-8,8),z:rnd(-8,8),y:rnd(.2,3.6),ph
 const smoke=Array.from({length:17},(_,i)=>({p:i/17,sz:rnd(.4,1.0),drift:rnd(-.5,.5)}));
 function particles(t,flash){ctx.clearRect(0,0,overlay.width,overlay.height);ctx.setTransform(ratio,0,0,ratio,0,0);
  for(let f of bugs){const p=project3(f.x+Math.sin(t*f.speed+f.phase)*.17,f.y+Math.sin(t*.9+f.phase)*.12,f.z+Math.cos(t*f.speed*.77+f.phase)*.13);let k=(1+Math.sin(t*f.speed*3+f.phase))*.5;if(k<.3)continue;ctx.fillStyle=`rgba(177,220,140,${k*.63})`;ctx.beginPath();ctx.arc(...p,f.size*k,0,Math.PI*2);ctx.fill();}
- for(const chimney of [[1.4,3.52,-3.87],[-4.21,4.25,-3.69]]){for(const s of smoke){let k=(s.p+t*.048)%1,px=chimney[0]+s.drift*k*.4,py=chimney[1]+k*2.8,pz=chimney[2]+Math.sin(k*6+s.p*9)*.19;let pt=project3(px,py,pz),radius=(4+14*k)*ratio;ctx.fillStyle=`rgba(173,187,180,${.11*(1-k)})`;ctx.beginPath();ctx.ellipse(pt[0],pt[1],radius,radius*.55,0,0,Math.PI*2);ctx.fill()}}
+ for(const chimney of [[1.4,3.52,-3.87],[-4.38,3.13,-3.71]]){for(const s of smoke){let k=(s.p+t*.048)%1,px=chimney[0]+s.drift*k*.4,py=chimney[1]+k*2.8,pz=chimney[2]+Math.sin(k*6+s.p*9)*.19;let pt=project3(px,py,pz),radius=(4+14*k)*ratio;ctx.fillStyle=`rgba(173,187,180,${.11*(1-k)})`;ctx.beginPath();ctx.ellipse(pt[0],pt[1],radius,radius*.55,0,0,Math.PI*2);ctx.fill()}}
  const lamps=[[.55,1.1,-1.28,165,'253,168,93'],[-3.5,1.8,-2.43,105,'233,141,65'],[3.43,1.12,-1.86,80,'99,230,176']];for(let [x,y,z,r,c] of lamps){let p=project3(x,y,z),g=ctx.createRadialGradient(...p,0,...p,r);g.addColorStop(0,`rgba(${c},.23)`);g.addColorStop(.36,`rgba(${c},.045)`);g.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,r,0,Math.PI*2);ctx.fill()}
  if(flash>.03){let p=project3(4.06,.53,2.35),g=ctx.createRadialGradient(...p,0,...p,26);g.addColorStop(0,`rgba(255,244,185,${flash*.88})`);g.addColorStop(1,'rgba(230,152,70,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(...p,26,0,Math.PI*2);ctx.fill();}
 }
