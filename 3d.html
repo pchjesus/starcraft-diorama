@@ -118,6 +118,21 @@ function armorWedge(b,x,y,z,baseW,topW,h,baseD,topD,top='#899b9b',side='#526771'
  const by=y-h/2,ty=y+h/2,B=[[-baseW/2,by,-baseD/2],[baseW/2,by,-baseD/2],[baseW/2,by,baseD/2],[-baseW/2,by,baseD/2]],T=[[-topW/2,ty,-topD/2],[topW/2,ty,-topD/2],[topW/2,ty,topD/2],[-topW/2,ty,topD/2]];
  b.push(x,0,z);b.quad(T[0],T[3],T[2],T[1],top);for(let k=0;k<4;k++){let j=(k+1)%4;b.quad(B[k],B[j],T[j],T[k],side);}b.pop();
 }
+// Low-poly armor with clipped corners and an inset upper perimeter.
+function clippedArmor(b,x,y,z,w,h,d,cut,inset,top,side){
+ const ring=(halfW,halfD,c,Y)=>[[-halfW+c,Y,-halfD],[halfW-c,Y,-halfD],[halfW,Y,-halfD+c],[halfW,Y,halfD-c],[halfW-c,Y,halfD],[-halfW+c,Y,halfD],[-halfW,Y,halfD-c],[-halfW,Y,-halfD+c]];
+ const lower=ring(w/2,d/2,cut,y-h/2),upper=ring(w/2-inset,d/2-inset,Math.max(.01,cut-inset*.4),y+h/2);
+ b.push(x,0,z);
+ // Face winding: lower -> upper -> next upper points OUTWARD on each side;
+ // the upper cap points +Y, and the lower cap points -Y.
+ for(let i=0;i<8;i++){
+  const j=(i+1)%8;
+  b.quad(lower[i],upper[i],upper[j],lower[j],side);
+  b.triangle([0,y+h/2,0],upper[j],upper[i],top);
+  b.triangle([0,y-h/2,0],lower[i],lower[j],side);
+ }
+ b.pop();
+}
 function axialWheel(b,x,y,z,r,color='#536369'){
  b.push(x,y,z,0,0,Math.PI/2);b.cylinder(0,0,0,r,.085,color,'#95a9a5',10);b.cylinder(0,.053,0,r*.47,.04,'#303e47','#667b7a',8);b.pop();
 }
@@ -437,7 +452,7 @@ function arcliteTwinBarrels(b){
   for(const side of [-1,1]){
     const x=side*.255;
     // Thick twin mantlets sit visibly within the turret's sloping front armor.
-    b.box(x,.149,.428,.302,.276,.448,'#657980','#354b57');
+    armorWedge(b,x,.149,.428,.302,.254,.276,.448,.39,'#657980','#354b57');
     b.box(x,.260,.497,.268,.066,.301,'#a2aba2','#536a73');
     b.box(side*.425,.129,.47,.086,.157,.315,'#526a74','#314852');
     // Barrel: 0.61 long instead of 1.07; thicker tube + clustered retaining bands.
@@ -464,7 +479,7 @@ function tank(b,x,z,t,dist,turn){
   for(const side of [-1,1]){
     for(const end of [-1,1]){
       const podZ=end*.51;
-      b.box(side*.77,.40,podZ,.58,.51,.98,iron,'#1c2c34');
+      clippedArmor(b,side*.77,.40,podZ,.58,.51,.98,.13,.025,iron,'#1c2c34');
       b.box(side*.77,.69,podZ,.61,.13,.91,treadEdge,iron);
       b.box(side*.77,.12,podZ,.61,.09,.90,'#45575b','#304249');
       // Moving shoes top and bottom; wrap within this individual tread pod.
@@ -498,8 +513,8 @@ function tank(b,x,z,t,dist,turn){
     b.box(side*.735,.71,-.14,.23,.085,.16,'#bd9b70','#6e5c4d');
   }
   // Deep underbody, rising stepped glacis and substantial rear engine deck.
-  b.box(0,.394,0,1.49,.34,2.04,'#536a71','#324650');
-  armorWedge(b,0,.673,.04,1.69,1.38,.56,2.12,1.70,'#82968f','#485e69');
+  clippedArmor(b,0,.394,0,1.49,.34,2.04,.24,.035,'#536a71','#324650');
+  clippedArmor(b,0,.673,.04,1.69,.56,2.12,.26,.15,'#82968f','#485e69');
   armorWedge(b,0,.716,.80,1.41,1.20,.20,.61,.39,'#99a69d','#546a72');
   b.box(0,.447,1.067,1.30,.16,.20,'#62767a','#354950');
   b.box(0,.382,1.165,.91,.12,.08,'#3b515b','#253942');
@@ -526,7 +541,7 @@ function tank(b,x,z,t,dist,turn){
   b.cylinder(0,1.123,-.14,.51,.055,'#586e74','#a7b1a7',12);
   // Only the turret/dual cannon subtree rotates, never the tracks or lower hull.
   b.push(0,1.16,-.14,turn);
-  armorWedge(b,0,.12,-.055,1.18,.92,.40,1.02,.78,'#8a9d98','#475c66');
+  clippedArmor(b,0,.12,-.055,1.18,.40,1.02,.18,.13,'#8a9d98','#475c66');
   b.box(0,.321,-.206,.80,.09,.52,'#aab5a9','#66797a');
   b.box(0,.312,.278,.87,.10,.23,'#637b7f','#364b55');
   // Squared, low-slung turret cheeks with thin corner armor details.
