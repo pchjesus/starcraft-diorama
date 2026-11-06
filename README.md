@@ -2,14 +2,16 @@
 
 **StarCraft: Brood War**에서 영감을 받은 비상업적 팬 디오라마. 평화로운 밤의 테란 군수공장에서 탱크가 천천히 나오면 마린이 깜짝 놀라고, 전차는 포탑으로 마린을 슥 본 뒤 머쓱하게 후진한다. SCV는 완성되지 않는 시설을 끝없이 공사한다.
 
-## 현재 버전: v1.0 — 독립 3D 디오라마
+## 현재 버전: v1.1 — 원작 비례·외형 폴리싱
 
 **실행:** [StarCraft Diorama 3D](https://pchjesus.github.io/starcraft-diorama/3d.html)
 
 - 스타크래프트 1 / 브루드워 유닛·건물의 **실루엣을 참고해 직접 만든 WebGL2 지오메트리**를 기본 화면으로 사용한다. 원본 스프라이트·텍스처를 GitHub에 포함하지 않는다.
 - 낮과 전투 대신 조용한 숲속 테란 군수공장의 밤. 35초마다 팩토리에서 시즈탱크 출고 → 마린 움찔 → 포탑 회전 → 머쓱한 후진 → 반복.
 - 시즈탱크 1대, CMC 마린 2명, SCV 1기, 팩토리·머신샵·아머리·서플라이 디폿과 완성되지 않는 벙커. 환풍기·연기·반딧불, 재생·일시정지 지원. 음악·효과음 없음.
-- 실제 WebGL2 Chromium에서 **13개 PC 시점 + 모바일 세로/가로 2개**, 터치와 재생·일시정지 검사를 통과했다. [검증 실행](https://github.com/pchjesus/starcraft-diorama/actions/workflows/v1-0-e-webgl.yml) · [v1.0-D 모델링 보고서](docs/V1_0_D_BUILDING_PASS.md).
+- v1.1: 마린/SCV/탱크의 크기 위계, 팩토리 대비 아머리·서플라이 디폿·미완성 벙커의 면적, 팩토리 경고색과 모바일 HUD 가독성을 정돈했다. SCV는 이제 벙커 바깥 3개 위치에서 작업하고 용접 광점도 따라 움직인다.
+- **실제 WebGL2 데스크톱 13개 시점 + 모바일 세로/가로 2개**, 재생·일시정지 및 모바일 터치, 유닛/건물 비례 7개 기준, SCV 공사 위치·18초 반복 확인이 모두 PASS했다. [v1.1 검증 실행](https://github.com/pchjesus/starcraft-diorama/actions/runs/42173058356) · [외형·비례 정합성 보고서](docs/V1_1_DESIGN_PROPORTIONS.md).
+- 이전 v1.0-D 건물 모델링 기록: [모델링 보고서](docs/V1_0_D_BUILDING_PASS.md).
 - 별도 보존된 이전 실험: [v0.9 로컬 스프라이트](./original.html), [v0.3 Canvas 안정판](./index.html). **현재 개발 기준은 `3d.html`**이다.
 
 ## 이전 실험 기록: v0.9 — 여러 프레임 지원
