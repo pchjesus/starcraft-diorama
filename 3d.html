@@ -572,8 +572,8 @@ const buildings=new Mesh();factoryStatic(buildings);const buildingGPU=makeGPU(bu
 const dynGPU={buff:gl.createBuffer(),count:0};
 const eye=[16,18,17],target=[0,0.5,0],view=M.look(eye,target,[0,1,0]);let vp=M.I(),width=0,height=0,ratio=1;
 function resize(){width=innerWidth;height=innerHeight;ratio=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);canvas.style.width=width+'px';canvas.style.height=height+'px';overlay.width=canvas.width;overlay.height=canvas.height;overlay.style.width=width+'px';overlay.style.height=height+'px';gl.viewport(0,0,canvas.width,canvas.height);
- // The horizontal field of view grows on wide screens; narrow phones show the whole island, not a clipped zoom.
- const aspect=width/height,halfX=aspect>1.2?11.55:9.7,halfY=halfX/aspect;const proj=M.ortho(-halfX,halfX,-halfY,halfY,-90,90);vp=M.mul(proj,view)}
+ // Keep the original isometric camera ANGLE; widen the orthographic view enough to fit tall roof towers on wide/landscape screens. Portrait retains its full-island framing.
+ const aspect=width/height,halfX=aspect>1.2?Math.max(11.55,aspect*7.5):9.7,halfY=halfX/aspect;const proj=M.ortho(-halfX,halfX,-halfY,halfY,-90,90);vp=M.mul(proj,view)}
 addEventListener('resize',resize);resize();
 let playing=true,clock=0,last=0;let q=new URLSearchParams(location.search),test=q.get('phase');if(test!==null && Number.isFinite(Number(test))){clock=Math.max(0,Number(test));playing=false}
 const assetState={enabled:false,source:'none',sprites:{},meta:{},status:'LOCAL SPRITE MODE · OFF'};
