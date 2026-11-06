@@ -205,46 +205,73 @@ function factoryShutter(b,phase){
  b.pop();
 }
 function boxSegment(b,a,c,w,top='#69867b',side='#354e4b'){b.beam(a[0],a[1],a[2],c[0],c[1],c[2],w,top)}
+// v1.0-B / independently modeled StarCraft 1 CMC-style infantry silhouette.
+// Relative scene scale follows the original gameplay sprite comparison, not lore meters.
 function marine(b,x,z,t,lead,react,watch){
- const tx=x-(lead?react*.23:0),tz=z+(lead?react*.15:0),breath=Math.sin(t*.72+(lead?0:1.4))*.027,bodyLift=react*.10;
- b.push(tx,.16,tz,lead?-.13:0);b.stack.push(M.mul(b.matrix,M.S(1.15,1.15,1.15)));
- // Chunky CMC suit boots, split kneecaps and armored thighs.
- for(let side of [-1,1]){
-  const shift=side<0&&lead?react*.15:0;
-  b.box(side*.20,.18,.08+shift,.29,.30,.40,'#536e68','#304a4b');
-  b.box(side*.20,.42,.00+shift*.8,.27,.32,.29,'#6a8d7e','#365750');
-  b.box(side*.20,.46,.20+shift,.28,.18,.19,'#90aa96','#42635c');
-  b.box(side*.20,.69,-.01,.30,.26,.34,'#638878','#3f5a53');
+ const tx=x-(lead?react*.23:0),tz=z+(lead?react*.15:0);
+ const breath=Math.sin(t*.72+(lead?0:1.4))*.020;
+ const crouch=react*.075, lean=-react*.09;
+ b.push(tx,.16,tz,lead?-.13:0,lean);
+ b.stack.push(M.mul(b.matrix,M.S(.81,.81,.81)));
+ // Wide metal sabatons, separate armored shin + kneecap, short thighs.
+ for(const side of [-1,1]){
+  const step=side<0&&lead?react*.17:0;
+  b.box(side*.22,.155,.14+step,.38,.28,.50,'#354853','#1e313d');
+  b.box(side*.22,.155,.36+step,.30,.10,.12,'#617784','#2e4754');
+  b.box(side*.22,.392,.015+step*.7,.33,.36,.31,'#536977','#2b414c');
+  armorWedge(b,side*.22,.468,.218+step,.32,.26,.16,.28,.18,'#93a0a3','#475c68');
+  b.box(side*.215,.685,-.025,.34,.29,.36,'#647986','#354a58');
+  b.box(side*.22,.808,-.09,.28,.09,.24,'#334955','#263844');
  }
- // Wide armored chest and bright trim read well at the tiny isometric scale.
- armorWedge(b,0,.98+breath+bodyLift,0,.82,.65,.67,.58,.48,'#75988c','#425f5a');
- b.box(0,.93+breath+bodyLift,.32,.63,.43,.15,'#456d66','#31524f');
- b.box(0,.84+breath+bodyLift,.41,.39,.13,.09,'#9cad9f','#486e65');
- b.box(0,.67+breath,-.08,.48,.16,.34,'#3e5652','#2a4847');
- b.box(0,1.08+breath+bodyLift,-.32,.62,.48,.22,'#496d65','#2a4b48');
- // Oversized round pauldrons and jointed forearms.
- for(let side of [-1,1]){
-  b.push(side*.48,1.14+breath+bodyLift,0,0,0,Math.PI/2);
-  b.cylinder(0,0,0,.30,.41,'#668d7d','#91b1a1',9);b.pop();
-  b.box(side*.59,.94+breath+bodyLift,.22,.23,.35,.26,'#47645c','#2c4e4b');
-  b.box(side*.57,.78+breath+bodyLift,.37,.19,.15,.25,'#91a597','#486760');
+ // Blocky power pack and backpack motor housings on the upper rear.
+ b.box(0,.99,-.345,.83,.73,.35,'#405460','#243844');
+ for(const side of [-1,1]){
+   b.box(side*.355,1.05,-.54,.21,.55,.22,'#72848b','#405863');
+   b.box(side*.35,1.22,-.668,.135,.16,.06,'#c2a067','#544b3a');
  }
- // Helmet yaw tracks the tank after the startled pose.
- b.push(0,1.53+breath+bodyLift,0,watch*(lead?-.42:-.06));
- b.cylinder(0,-.08,0,.34,.34,'#627e75','#88a599',9);
- armorWedge(b,0,.14,0,.63,.50,.33,.64,.52,'#819e92','#4a6965');
- b.box(0,-.02,.319,.50,.19,.08,'#172f39','#163c46');
- b.box(0,.015,.369,.39,.075,.04,'#4ba5a5','#276676');
- b.box(0,-.18,.30,.36,.10,.16,'#4e6965','#2b4747');
- for(let side of [-1,1]){b.box(side*.33,-.075,0,.14,.17,.32,'#526f66','#355650');b.box(side*.27,.09,.22,.13,.07,.09,'#a6b8a4','#4d746b');}
+ // Front torso: compact barrel-shaped CMC chest / high raised collar.
+ armorWedge(b,0,.99+breath-crouch,0,.86,.67,.76,.72,.53,'#5a7280','#263e4c');
+ b.box(0,1.02+breath-crouch,.37,.69,.44,.16,'#324a58','#203442');
+ b.box(0,.90+breath-crouch,.47,.52,.19,.065,'#869899','#465a62');
+ b.box(0,1.23+breath-crouch,.38,.42,.09,.09,'#bdc5ad','#5b7278');
+ b.box(0,.704,-.025,.51,.15,.38,'#364b59','#223743');
+ for(let side of [-1,1])b.box(side*.25,1.01+breath,.485,.10,.15,.06,'#95a8a8','#49636a');
+ // Original CMC identifying shape: big round pauldrons dominate both shoulders.
+ for(const side of [-1,1]){
+   b.push(side*.55,1.20+breath-crouch,-.005,0,0,Math.PI/2);
+   b.cylinder(0,0,0,.365,.44,'#40586b','#90a5ab',12);
+   b.cylinder(0,side*.245,0,.26,.033,'#667b8b','#768e96',12);
+   b.pop();
+   b.box(side*.57,1.32+breath-crouch,.22,.30,.11,.15,'#8b9399','#455c68');
+   b.box(side*.62,1.08+breath-crouch,.18,.29,.35,.27,'#3d5365','#253d4c');
+   b.box(side*.555,.83+breath-crouch,.27,.25,.23,.32,'#738792','#384f5d');
+   b.box(side*.53,.737+breath-crouch,.42,.24,.14,.17,'#879a9e','#475f65');
+   // Red identification stripe on the armor, not full SC2 red pauldrons.
+   b.box(side*.70,1.28+breath-crouch,.05,.065,.11,.28,'#8c4349','#482e38');
+ }
+ // Hefty low-sitting helmet with dark face recess and narrow warm visor.
+ b.push(0,1.51+breath-crouch,0,watch*(lead?-.42:-.06)+react*.07);
+ b.cylinder(0,-.045,0,.365,.38,'#415a69','#788d94',11);
+ armorWedge(b,0,.135,.045,.72,.56,.34,.68,.49,'#82959c','#435d6b');
+ b.box(0,-.065,.344,.57,.205,.09,'#192e3c','#142936');
+ b.box(0,-.031,.401,.47,.095,.06,'#c7a66c','#675b46');
+ b.box(0,-.16,.334,.39,.12,.13,'#485f68','#263d48');
+ for(const side of [-1,1]){
+   b.box(side*.345,-.06,.07,.16,.21,.35,'#4d6776','#2a4654');
+   b.box(side*.28,.142,.25,.115,.077,.10,'#98a6a4','#4a636b');
+ }
  b.pop();
- // Long blocky Gauss rifle tilts up slightly during surprise.
- b.push(0,react*.22,0);
- b.box(0,.88,.54,.92,.16,.25,'#2a3e46','#203039');
- b.box(.34,.88,.65,.49,.09,.17,'#a9aea3','#66777a');
- b.box(.61,.89,.66,.18,.13,.16,'#5a7178','#364e53');
- b.box(-.41,.81,.50,.20,.26,.19,'#667b78','#43565a');
- b.box(-.06,.73,.57,.19,.26,.15,'#435a57','#2d4649');
+ // Distinct long C-14 Gauss rifle with receiver, muzzle and lower handgrip.
+ // React raises the gun while the shoulders/helmet remain independent.
+ b.push(0,react*.25,0,-react*.07,react*.085);
+ b.box(0,.865,.575,.98,.20,.25,'#2a373c','#17272d');
+ b.box(.285,.886,.72,.55,.13,.23,'#5f665e','#353b39');
+ b.box(.61,.9,.753,.36,.105,.143,'#94988b','#495352');
+ b.box(.84,.90,.766,.20,.16,.19,'#3a4d57','#213640');
+ b.box(.948,.90,.767,.075,.075,.12,'#101f27','#24353d');
+ b.box(-.465,.843,.545,.31,.27,.22,'#5a655f','#2b373c');
+ b.box(-.185,.691,.60,.20,.29,.17,'#4c5c5d','#293d43');
+ b.box(.08,.769,.67,.31,.065,.10,'#a2aa9d','#4c5d5c');
  b.pop();b.pop();b.pop();
 }
 // v1.0-A / 1998 StarCraft Arclite-inspired, independently authored primitives.
