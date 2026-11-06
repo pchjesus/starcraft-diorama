@@ -419,9 +419,9 @@ function marine(b,x,z,t,lead,react,watch){
  // Distinct long C-14 Gauss rifle with receiver, muzzle and lower handgrip.
  // React raises the gun while the shoulders/helmet remain independent.
  b.push(0,react*.25,0,-react*.07,react*.085);
- b.box(0,.865,.575,.98,.20,.25,'#2a373c','#17272d');
- b.box(.285,.886,.72,.55,.13,.23,'#5f665e','#353b39');
- b.box(.61,.9,.753,.36,.105,.143,'#94988b','#495352');
+ b.box(0,.865,.575,.98,.20,.25,'#4d554c','#26343b');
+ b.box(.285,.886,.72,.55,.13,.23,'#777d6c','#434b43');
+ b.box(.61,.9,.753,.36,.105,.143,'#9a9c88','#495352');
  b.box(.53,.984,.752,.54,.052,.128,'#718287','#364d53');
  b.box(.58,.821,.775,.38,.058,.148,'#414f54','#293b43');
  b.box(.84,.90,.766,.20,.16,.19,'#3a4d57','#213640');
@@ -571,10 +571,13 @@ function scv(b,t){
   b.cylinder(0,side*.065,0,.061,.036,'#203642','#617984',10);
   b.pop();
   b.box(side*.37,.11,.465,.25,.085,.18,'#a0a49c','#526572');
+  // Split splayed rear stabilizers: SCV should not read as a single humanoid leg.
+  armorWedge(b,side*.43,.172,-.37,.31,.22,.185,.33,.24,'#84979a','#405766');
+  b.box(side*.43,.082,-.48,.29,.102,.23,'#9caba5','#526b72');
    b.box(side*.45,.337,-.055,.28,.29,.62,'#485b69','#263b49');
  }
- b.box(0,.412,-.04,.83,.40,.73,'#586974','#2a414f');
- armorWedge(b,0,.661,-.06,.90,.72,.37,.73,.55,'#748491','#405665');
+ b.box(0,.412,-.04,.83,.40,.73,'#697d88','#354b57');
+ armorWedge(b,0,.661,-.06,.90,.72,.37,.73,.55,'#8b9da5','#465e6b');
  b.box(0,.85,-.18,.69,.20,.43,'#485e6e','#283f4f');
  // Clearly readable front cockpit, dark glass and low honey-yellow pilot glow.
  armorWedge(b,0,.755,.235,.51,.46,.33,.35,.23,'#344e5c','#263a48');
@@ -582,7 +585,7 @@ function scv(b,t){
  b.box(0,.797,.464,.322,.100,.033,'#96c9bd','#356e78');
  b.box(-.11,.829,.488,.095,.025,.018,'#c0e1d2','#668c8b');
  b.box(0,.958,-.075,.35,.055,.28,'#a4acaa','#556b74');
- b.box(0,1.003,.070,.43,.086,.33,'#5b7280','#384d59');
+ b.box(0,1.003,.070,.43,.086,.33,'#7b9298','#455e6a');
  b.box(0,.577,.485,.33,.095,.16,'#b7a777','#685e4c');
  for(const side of [-1,1]){
   // Exposed rounded actuators on both sides of the CMC-adjacent utility cockpit.
@@ -591,8 +594,8 @@ function scv(b,t){
   b.cylinder(0,side*.17,0,.13,.039,'#182f3c','#6f848a',9);
   b.pop();
   // Large red tool housing: two independent arms and visible elbow joints.
-  b.box(side*.625,.665,.21,.34,.37,.42,'#99434a','#4e2937');
-  b.box(side*.655,.863,.225,.294,.048,.28,'#be615d','#653840');
+  b.box(side*.625,.665,.21,.34,.37,.42,'#b24c50','#602f3b');
+  b.box(side*.655,.863,.225,.294,.048,.28,'#d77163','#763c43');
   b.box(side*.71,.779,.25,.20,.12,.28,'#c26b61','#6b3740');
   b.push(side*.65,.62,.17,side*.12+Math.sin(t*3.2+side)*.17,Math.sin(t*4.1+side)*.06);
   b.cylinder(side*.03,-.075,.195,.147,.20,'#596a72','#95a29e',9);
