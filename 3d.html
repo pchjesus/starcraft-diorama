@@ -20,6 +20,11 @@
 
 #spriteToggle,#assetBtn{height:34px;padding:0 12px;border-radius:999px;border:1px solid #9faeb755;background:#0c1d24c9;color:#eaf1df;font-size:11px;letter-spacing:.05em;cursor:pointer}
 #spriteToggle:hover,#spriteToggle:focus-visible,#assetBtn:hover,#assetBtn:focus-visible{background:#25454d;outline-color:#a6dbce}
+/* v1.1: keep all legacy controls but let the miniature lead visually. */
+#assetBtn,#spriteToggle{background:#0c1d24a3;border-color:#90a6aa35;color:#b8c4bd}
+#badge{opacity:.52}
+@media (max-height:440px){#hud{bottom:9px;gap:7px}#pause{width:33px;height:33px}#assetBtn,#spriteToggle{height:29px;padding:0 9px}.eyebrow,.subtitle,#assetMode{display:none}#badge{bottom:10px;font-size:8px}}
+
 #assetMode{display:block;font-size:10px;color:#d8c28f;margin-top:3px}
 #assetInput{display:none}
 @media(max-width:640px){#hud{left:12px;bottom:15px;gap:8px;flex-wrap:wrap;max-width:92vw}#pause{width:36px;height:36px}#spriteToggle,#assetBtn{height:30px;padding:0 10px;font-size:10px}.title{font-size:13px}.subtitle{display:none}#badge{right:12px;bottom:16px;font-size:8px}}
@@ -172,6 +177,12 @@ function factory(b){b.push(.55,0,-2.95);
  warningMark(b,0,.43,1.89,1.30);
  // Distinct side hatch, red warning lamps and a horizontal cooling grille.
  b.box(1.94,1.32,-.56,.09,1.00,.94,'#314a54','#21353e');
+ // The original Factory reads with red structural stripes and black recessed vents.
+ for(const zz of [-.96,.60])b.box(1.993,1.66,zz,.066,.68,.14,'#9b4549','#5e3039');
+ for(const xx of [-1.23,1.23]){
+  b.box(xx,2.87,.18,.23,.12,.42,'#9e4d51','#5f343c');
+  b.box(xx,2.90,-.03,.19,.055,.18,'#d27765','#65464a');
+ }
  for(let j=0;j<5;j++)b.box(2.005,.99+j*.155,-.57,.060,.045,.70,'#71848a','#354951');
  for(let i=0;i<3;i++){b.box(1.98,.95+i*.38,-.99,.065,.11,.14,'#d6a35d','#594a3a')}
  for(let j=0;j<8;j++)b.box(-1.71+j*.46,.98,-1.51,.10,.34,.08,j%2?'#485d65':'#73868a','#425760');
@@ -299,12 +310,26 @@ function machineShop(b){b.push(3.43,0,-2.94);
  for(let j=0;j<4;j++)b.box(-.68+j*.39,.29,-.91,.24,.12,.17,j%2?'#bb985d':'#455861','#52646c');
  b.pop();
 }
-function bunker(b){b.push(3.91,0,2.18);b.box(0,.15,0,1.83,.16,1.66,'#566e70','#36454a');
- for(let x of [-.83,.83])for(let z of [-.72,.72]){b.box(x,.57,z,.14,1.05,.14,'#849b9a','#607982');b.box(x,1.1,z,.22,.14,.22,'#b4bdb2','#6e8583')}
+// The static incomplete bunker remains intentionally half-built forever.
+function bunker(b){
+ b.push(3.91,0,2.18);
+ b.stack.push(M.mul(b.matrix,M.S(1.19,1.13,1.12)));
+ b.box(0,.15,0,1.83,.16,1.66,'#566e70','#36454a');
+ // Four reinforced uprights and exposed roof beams, never closed off by a roof.
+ for(let x of [-.83,.83])for(let z of [-.72,.72]){
+  b.box(x,.57,z,.14,1.05,.14,'#849b9a','#607982');
+  b.box(x,1.10,z,.22,.14,.22,'#b4bdb2','#6e8583');
+  b.box(x,1.17,z,.16,.10,.16,'#b59b65','#6a674c');
+ }
  for(let z of [-.7,.7])b.box(0,.86,z,1.8,.12,.13,'#8da6a6','#607d7e');
  for(let x of [-.83,.83])b.box(x,.86,0,.14,.12,1.54,'#829e9f','#537079');
- // An eternal construction frame: no growth, no progress meter, no reset pop.
- for(let x of [-.43,.43])b.box(x,.34,.24,.35,.25,.35,'#6f7b73','#4d605d');b.pop()}
+ // Only partial waist-height armor bays, so it still reads as construction.
+ b.box(-.47,.44,.77,.58,.39,.09,'#586970','#394b53');
+ b.box(.48,.37,-.77,.65,.29,.09,'#607780','#3a515c');
+ for(let x of [-.43,.43])b.box(x,.34,.24,.35,.25,.35,'#6f7b73','#4d605d');
+ for(let x of [-.50,.50])b.box(x,.34,.834,.36,.08,.06,'#a89665','#4d5755');
+ b.pop();b.pop();
+}
 function factoryStatic(b){factory(b);machineShop(b);armory(b);supply(b);bunker(b);
  // Static industrial exterior fixtures, bolt pattern and side pipes.
  for(let i=0;i<8;i++)b.box(-1.03+i*.22,.17,-1.28,.1,.025,.15,i%2?'#c8a263':'#384a49','#43534c');
@@ -509,7 +534,7 @@ function scv(b,t){
  const bob=Math.sin(t*2.6)*.023,weld=(phase%6)<3.9;
  b.push(x,.18+bob,z,-.55+(k-1)*.23);
  // StarCraft 1 gameplay footprint guidance: SCV wider than a marine, smaller than a tank; scene-height goal ~1.4-1.6x marine.
- b.stack.push(M.mul(b.matrix,M.S(.72,1.95,.82)));
+ b.stack.push(M.mul(b.matrix,M.S(.68,1.95,.82)));
  // Dual pointed stabilizer feet / chassis below the blue-grey utility body.
  for(const side of [-1,1]){
    b.box(side*.37,.145,.26,.38,.24,.44,'#324657','#20313d');
