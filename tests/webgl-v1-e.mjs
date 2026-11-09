@@ -198,10 +198,11 @@ async function check(phase,width,height,mobile=false){
         assert.equal(cleanState.error,0,'clean mode GPU error');
         await clean.locator('#stage').screenshot({path:join(folder,'clean-reference-18.png')});
         report.cleanFallback=cleanState;
-      }finally{await clean.close();}
+      }finally{await clean.close();await page.bringToFront();}
       const getProgress=()=>page.locator('#progress').evaluate(el=>parseFloat(el.style.width));
       const before=await getProgress();
-      await page.locator('#pause').click();await page.waitForTimeout(450);
+      await page.locator('#pause').click();
+      await page.waitForFunction(prev=>parseFloat(document.querySelector('#progress').style.width)>prev, before, {timeout:3500});
       const after=await getProgress();
       assert.ok(after>before,'play did not advance time');
       assert.equal(await page.locator('#pause').getAttribute('aria-label'),'일시정지');
