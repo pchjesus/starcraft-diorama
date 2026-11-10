@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071318">
-<title>Factory After Hours · Classic RTS Pixel Pass v1.4</title>
+<title>Factory After Hours · Sharp Classic RTS v1.4.1</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071318;color:#ecf2eb}
-#stage,#particles{position:fixed;inset:0;width:100%;height:100%;display:block}#stage{image-rendering:pixelated}#particles{pointer-events:none}
+#stage,#particles{position:fixed;inset:0;width:100%;height:100%;display:block}#particles{pointer-events:none}
 #vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 51% 46%,transparent 37%,#02090e9e 100%),linear-gradient(#030c1580,transparent 23%,transparent 73%,#03090b8f)}
 #hud{position:fixed;left:25px;bottom:22px;display:flex;gap:12px;align-items:center;z-index:3;text-shadow:0 2px 12px #000}
 #pause{width:41px;height:41px;border-radius:50%;border:1px solid #9faeb755;background:#0c1d24c9;color:#f0e8d5;font-size:17px;cursor:pointer}
@@ -33,15 +33,15 @@
 <body>
 <canvas id="stage" aria-label="테란풍 숲속 군수공장의 3D 장면"></canvas><canvas id="particles"></canvas><div id="vignette"></div>
 <div id="hud"><button id="pause" type="button" aria-label="일시정지" title="일시정지 (Space)">Ⅱ</button><button id="assetBtn" type="button" title="로컬 스타1 그래픽팩 불러오기">로컬 그래픽팩</button><button id="spriteToggle" type="button" title="스프라이트 레이어 전환">그래픽: 픽셀</button><input id="assetInput" type="file" accept="image/*,.json" multiple webkitdirectory directory><div><div class="eyebrow">SCENE 01 / CLASSIC TERRAN RTS</div><div class="title">Factory after hours</div><div class="subtitle">아무도 끝내지 않는 공사, 아무도 익숙해지지 않는 출고</div><span id="assetMode">LOCAL SPRITE MODE · OFF</span></div></div>
-<div id="badge">V1.4 · CLASSIC RTS PIXEL LOOK · NO AUDIO</div><div id="progress"></div>
+<div id="badge">V1.4.1 · SHARP CLASSIC RTS · NO AUDIO</div><div id="progress"></div>
 <div id="fallback"><h2>3D 화면을 실행할 수 없어.</h2><div>WebGL을 지원하는 브라우저에서 다시 열어줘.</div><a href="./">안정적인 v0.3 화면으로 돌아가기</a></div>
 <script>
 'use strict';
-// Independently authored RTS diorama. Default: low-resolution pixel-art presentation, not copied game sprites.
-// ?style=clean restores v1.3 continuous shading and native-resolution WebGL for comparison.
-const retroLook=new URLSearchParams(location.search).get('style')!=='clean';
-const canvas=document.getElementById('stage'), gl=canvas.getContext('webgl2',{antialias:!retroLook,alpha:false,powerPreference:'high-performance'}), overlay=document.getElementById('particles'), ctx=overlay.getContext('2d');
-canvas.style.imageRendering=retroLook?'pixelated':'auto';
+// Independently authored RTS diorama. Native-resolution anti-aliased output with restrained classic lighting.
+// ?style=clean retains the unmodified continuous-shading look for direct comparison.
+const classicShading=new URLSearchParams(location.search).get('style')!=='clean';
+const canvas=document.getElementById('stage'), gl=canvas.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'}), overlay=document.getElementById('particles'), ctx=overlay.getContext('2d');
+canvas.style.imageRendering='auto';
 if(!gl){document.getElementById('fallback').style.display='flex';throw Error('WebGL2 unavailable');}
 const $=id=>document.getElementById(id), clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)), lerp=(a,b,t)=>a+(b-a)*t, smooth=t=>{t=clamp(t);return t*t*(3-2*t)}, S=(a,b,t)=>smooth((t-a)/(b-a));
 function mulberry32(a){return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;}};
@@ -637,21 +637,19 @@ void main(){
  float diffuse=max(dot(n,moon),0.0),ambient=.75+.19*max(n.y,0.0);
  float fill=max(dot(n,vec3(.4,.5,.8)),0.0)*.17;
  float shade=ambient+diffuse*.49;
- if(uRetro>.5)shade=floor(shade*5.0+.5)/5.0;
+ if(uRetro>.5)shade=floor(shade*12.0+.5)/12.0;
  vec3 lighting=vec3(.74,.83,.91)*shade+vec3(.08,.13,.16)*fill;
  float warm=1.9/(1.0+pow(length((vPos-vec3(.55,1.2,-1.36))*vec3(.85,1.3,.85)),2.0)*.34);
  warm+=1.25/(1.0+pow(length((vPos-vec3(-3.5,1.9,-2.7))*vec3(.9,1.1,.8)),2.0)*.5);
  lighting+=vec3(1.0,.53,.22)*warm*.55;
  vec3 c=vC*lighting;float dist=length(vPos-uCamera);
- float haze=clamp((dist-19.0)/30.0,0.0,uRetro>.5?.20:.34);
+ float haze=clamp((dist-19.0)/30.0,0.0,uRetro>.5?.25:.34);
  c=mix(c,vec3(.035,.09,.11),haze);
  c=pow(max(c,vec3(0.0)),vec3(.88));
  if(uRetro>.5){
-   // Quantized illumination and restrained checker dithering recall 1998 RTS renders.
+   // Remastered-style clarity: gentle material contrast, no pixel dithering or color posterization.
    float gray=dot(c,vec3(.299,.587,.114));
-   c=clamp(mix(vec3(gray),c,1.10),0.0,1.0);
-   float checker=mod(floor(gl_FragCoord.x)+floor(gl_FragCoord.y),2.0);
-   c=clamp(floor(c*15.0+.5+(checker-.5)*.22)/15.0,0.0,1.0);
+   c=clamp(mix(vec3(gray),c,1.08),0.0,1.0);
  }
  outColor=vec4(c,1.0);
 }`;
@@ -665,8 +663,8 @@ const landscape=new Mesh();buildLandscape(landscape);const staticGPU=makeGPU(lan
 const buildings=new Mesh();factoryStatic(buildings);const buildingGPU=makeGPU(buildings.data,gl.STATIC_DRAW);
 const dynGPU={buff:gl.createBuffer(),count:0};
 const eye=[16,18,17],target=[0,0.5,0],view=M.look(eye,target,[0,1,0]);let vp=M.I(),width=0,height=0,ratio=1;
-// Rendering is intentionally lower-resolution than the CSS scene; overlay/HUD stay crisp.
-function resize(){width=innerWidth;height=innerHeight;ratio=Math.min(devicePixelRatio||1,2);const retroScale=retroLook?Math.min(.78,Math.max(.50,300/Math.min(width,height))):1;canvas.width=Math.round(width*ratio*retroScale);canvas.height=Math.round(height*ratio*retroScale);canvas.style.width=width+'px';canvas.style.height=height+'px';overlay.width=Math.round(width*ratio);overlay.height=Math.round(height*ratio);overlay.style.width=width+'px';overlay.style.height=height+'px';gl.viewport(0,0,canvas.width,canvas.height);
+// Render at native device resolution (DPR capped at 2), never upscale a deliberately reduced buffer.
+function resize(){width=innerWidth;height=innerHeight;ratio=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);canvas.style.width=width+'px';canvas.style.height=height+'px';overlay.width=Math.round(width*ratio);overlay.height=Math.round(height*ratio);overlay.style.width=width+'px';overlay.style.height=height+'px';gl.viewport(0,0,canvas.width,canvas.height);
  // Keep the original isometric camera ANGLE; widen the orthographic view enough to fit tall roof towers on wide/landscape screens. Portrait retains its full-island framing.
  const aspect=width/height,halfX=aspect>1.2?Math.max(11.55,aspect*7.5):9.7,halfY=halfX/aspect;const proj=M.ortho(-halfX,halfX,-halfY,halfY,-90,90);vp=M.mul(proj,view)}
 addEventListener('resize',resize);resize();
@@ -720,7 +718,7 @@ const cc0Pack={
   scv:CC0_ROOT+'Unit/scifiUnit_09.png'
 };
 function syncSpriteToggle(){
-  spriteToggle.textContent=assetState.enabled?'그래픽: 혼합':(retroLook?'그래픽: 픽셀':'그래픽: 3D');
+  spriteToggle.textContent=assetState.enabled?'그래픽: 혼합':(classicShading?'그래픽: RTS':'그래픽: 3D');
   spriteToggle.setAttribute('aria-pressed',String(assetState.enabled));
 }
 async function autoLoadCC0(){
@@ -766,7 +764,7 @@ function frame(ms){if(!last)last=ms;let dt=Math.min((ms-last)*.001,.06);last=ms;
  const react=S(14.48,14.85,phase)*(1-S(16,17.55,phase)),watch=S(14.5,15.1,phase)*(1-S(25.3,27.4,phase)),angle=-.85*S(15.40,17.15,phase)*(1-S(18.5,20.45,phase));
  const dyn=new Mesh();animatedFans(dyn,t);factoryShutter(dyn,phase);marine(dyn,-1.52,2.18,t,true,react,watch);marine(dyn,-3.15,1.45,t,false,0,watch);if(phase>=7.7 && phase<29.5)tank(dyn,.55,-1.30+out*2.38,t,out,angle);scv(dyn,t);
  const d= new Float32Array(dyn.data);gl.bindBuffer(gl.ARRAY_BUFFER,dynGPU.buff);gl.bufferData(gl.ARRAY_BUFFER,d,gl.DYNAMIC_DRAW);dynGPU.count=d.length/9;
- gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(.019,.055,.073,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.uniformMatrix4fv(vpLoc,false,new Float32Array(vp));gl.uniform3fv(camLoc,new Float32Array(eye));gl.uniform1f(retroLoc,retroLook?1:0);gl.bindVertexArray(vao);
+ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.clearColor(.019,.055,.073,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.uniformMatrix4fv(vpLoc,false,new Float32Array(vp));gl.uniform3fv(camLoc,new Float32Array(eye));gl.uniform1f(retroLoc,classicShading?1:0);gl.bindVertexArray(vao);
  drawGPU(staticGPU);drawGPU(buildingGPU);drawGPU(dynGPU);
  const welding=(t%18)%6<3.9,flash=welding?(Math.sin(t*23)>0.45?1:0):0;particles(t,flash);drawSpritePack(phase,out,react,watch,t);$('progress').style.width=(phase/35*100)+'%';requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
