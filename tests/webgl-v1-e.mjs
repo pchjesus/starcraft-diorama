@@ -7,7 +7,7 @@ import { PNG } from 'pngjs';
 
 const folder=join(process.cwd(),'test-results','v1-e');
 await mkdir(folder,{recursive:true});
-const report={name:'StarCraft Diorama v1.4 classic RTS visual check',checks:[],errors:[],conclusion:'INCOMPLETE'};
+const report={name:'StarCraft Diorama v1.4.1 sharp classic RTS visual check',checks:[],errors:[],conclusion:'INCOMPLETE'};
 const server=createServer(async (req,res)=>{
   if(new URL(req.url,'http://localhost').pathname!=='/3d.html'){res.writeHead(404);res.end();return;}
   try {
@@ -32,7 +32,7 @@ async function check(phase,width,height,mobile=false){
       const canvas=document.querySelector('#stage'),gl=canvas.getContext('webgl2');
       return {
         webgl2:!!gl,version:gl?.getParameter(gl.VERSION)||null,
-        error:gl?.getError(),dimensions:gl?[gl.drawingBufferWidth,gl.drawingBufferHeight]:null, imageRendering:getComputedStyle(canvas).imageRendering,
+        error:gl?.getError(),dimensions:gl?[gl.drawingBufferWidth,gl.drawingBufferHeight]:null, imageRendering:getComputedStyle(canvas).imageRendering,antialias:gl?.getContextAttributes()?.antialias,
         fallback:getComputedStyle(document.querySelector('#fallback')).display,
         progress:parseFloat(document.querySelector('#progress').style.width),
         pause:document.querySelector('#pause').getAttribute('aria-label')
@@ -40,11 +40,10 @@ async function check(phase,width,height,mobile=false){
     });
     assert.ok(state.webgl2,label+': WebGL2 not available');
     assert.equal(state.error,0,label+': GPU error');
-    // Real pixels are intentionally fewer than CSS pixels in the default classic RTS view.
-    const renderScale=Math.min(.78,Math.max(.50,300/Math.min(width,height)));
-    assert.deepEqual(state.dimensions,[Math.round(width*renderScale),Math.round(height*renderScale)],
-      label+': pixel-mode framebuffer resolution');
-    assert.equal(state.imageRendering,'pixelated',label+': not nearest-neighbor scaled');
+    // Crisp game graphics are required: full device resolution, MSAA, no forced pixel scaling.
+    assert.deepEqual(state.dimensions,[width,height],label+': output below display resolution');
+    assert.notEqual(state.imageRendering,'pixelated',label+': forced low-res pixels remain');
+    assert.equal(state.antialias,true,label+': multi-sample antialiasing disabled');
     assert.equal(state.fallback,'none',label+': fallback shown');
     assert.equal(state.pause,'재생',label+': pause initial state');
     assert.ok(Math.abs(state.progress-phase/35*100)<.8,label+': incorrect phase progress');
@@ -196,6 +195,7 @@ async function check(phase,width,height,mobile=false){
         assert.equal(cleanState.height,height,'clean mode must render at original resolution');
         assert.notEqual(cleanState.render,'pixelated','clean mode should not be pixel scaled');
         assert.equal(cleanState.error,0,'clean mode GPU error');
+        assert.equal(state.antialias,true,'default mode should also be anti-aliased');
         await clean.locator('#stage').screenshot({path:join(folder,'clean-reference-18.png')});
         report.cleanFallback=cleanState;
       }finally{await clean.close();await page.bringToFront();}
