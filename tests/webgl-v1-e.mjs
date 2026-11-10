@@ -92,6 +92,31 @@ async function check(phase,width,height,mobile=false){
         assert.ok(ratio>=low&&ratio<=high,name+': '+ratio+' outside '+low+'–'+high);
       }
       report.proportions=sizes;
+      // v1.4-A: verify every clipped-armor triangle faces outward and has area.
+      // This catches inward normals even when face culling is disabled in the scene.
+      const armorSurface=await page.evaluate(()=>{
+        const m=new Mesh();clippedArmor(m,0,0,0,2,1,2,.24,.12,'#87999b','#506872');
+        const d=m.data, counts={side:0,top:0,bottom:0},issues=[];
+        for(let i=0;i<d.length;i+=27){
+          const verts=[0,9,18].map(k=>d.slice(i+k,i+k+3));
+          const n=d.slice(i+3,i+6);
+          const c=[0,1,2].map(k=>(verts[0][k]+verts[1][k]+verts[2][k])/3);
+          const u=verts[1].map((v,k)=>v-verts[0][k]);
+          const v=verts[2].map((v,k)=>v-verts[0][k]);
+          const cr=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+          const area=Math.hypot(...cr)/2;
+          if(!Number.isFinite(area)||area<=1e-6)issues.push('degenerate '+(i/27));
+          if(Math.abs(c[1]-.5)<1e-5){counts.top++;if(n[1]<.99)issues.push('top inward '+(i/27));}
+          else if(Math.abs(c[1]+.5)<1e-5){counts.bottom++;if(n[1]>-.99)issues.push('bottom inward '+(i/27));}
+          else {counts.side++;if(n[0]*c[0]+n[2]*c[2]<=.05)issues.push('side inward '+(i/27));}
+        }
+        return {triangles:d.length/27,vertices:d.length/9,counts,issues,balanced:m.stack.length===1,finite:d.every(Number.isFinite)};
+      });
+      assert.ok(armorSurface.finite&&armorSurface.balanced,'clipped armor nonfinite/stack');
+      assert.equal(armorSurface.triangles,32,'clipped armor should be a closed 32-triangle prism');
+      assert.deepEqual(armorSurface.counts,{side:16,top:8,bottom:8},'clipped armor topology mismatch');
+      assert.deepEqual(armorSurface.issues,[],'clipped armor normals / triangle degeneracy');
+      report.clippedArmorTopology=armorSurface;
       const workerSites=await page.evaluate(()=>{
         const bbox=new Mesh();bunker(bbox);
         let right=-Infinity,front=-Infinity;
